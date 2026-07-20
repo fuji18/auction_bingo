@@ -1,0 +1,68 @@
+name: CI
+
+# 機械的な品質ゲート(lint / 型チェック / フォーマット / テスト)。
+# Claude によるレビュー(claude-code-review.yml)とは独立して常に走る。
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Test
+        run: npm test
+
+      - name: Secret scan
+        run: npx secretlint "**/*"
+
+      # 上流の advisory 公開で依存と無関係な PR が赤くならないよう非ブロッキングにする
+      # (依存更新自体は dependabot が担う。警告は Actions の annotation で確認できる)
+      - name: Dependency audit
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
+      # ハーネスの自壊検知: hook スクリプトの実行権限と settings.json の構文を検証する
+      # (PreToolUse hook は実行失敗時にフェイルオープンになるため、CI で機械的に担保する)
+      - name: Harness integrity
+        run: |
+          jq . .claude/settings.json > /dev/null
+          for s in .claude/scripts/*.sh .claude/hooks/*.sh; do
+            [ -f "$s" ] || continue
+            if [ ! -x "$s" ]; then
+              echo "::error::hook スクリプトに実行権限がありません: $s"
+              exit 1
+            fi
+            bash -n "$s"
+          done
