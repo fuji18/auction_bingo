@@ -3,11 +3,24 @@
 ## 技術スタック
 
 - 開発環境: devcontainer
-- Node.js v24(devcontainer / CI / `engines` で固定)
-- TypeScript 6.x
-- パッケージマネージャー: npm
+- Node.js v24(devcontainer / CI / `engines` で固定)、パッケージマネージャー: npm
+- TypeScript 6.x / **Svelte 5** / **Vite 8**
+- 検証: `npm run lint`(ESLint 10 + eslint-plugin-svelte) / `npm run typecheck`(**svelte-check**) / `npm test`(Vitest 4) / `npm run format:check`(Prettier + prettier-plugin-svelte)
+- 配信: **静的サイト**(`vite build` → `dist/`)を Cloudflare Pages へ。設定は `wrangler.toml`
 
-※ テンプレート既定値。プロジェクト開始時(`/kickoff`)にアイデアの技術選定と突き合わせ、実態に更新する。
+### ハブ&スポーク構成
+
+本リポジトリは `fujioha_platform`(Astro のハブ)に対する**スポーク**であり、独立リポジトリ・独自サブドメイン(`auction-bingo.fujioha.com` を想定)で完結する。既存スポーク `kanji_gacha` と同じ構成(Vite + Svelte 5 + TypeScript + Cloudflare Pages)を踏襲する。
+
+- ハブとは URL でのみ繋がる疎結合。共有パッケージ `@fujioha/ui` は Astro 専用のため**使わない**
+- 公開時はハブ側に `apps/game/src/content/games/auction-bingo.json` の追加が必要(`src/content/config.ts` の `icon` enum にビンゴ向けの値が無いため schema 拡張も要る)
+
+### 設計上の制約(オンライン化を見据える)
+
+- ゲームロジックは `src/core/` に**純粋なリデューサ**として置き、UI・タイマー・乱数に依存させない
+- 乱数は state 内の seed から生成する(`Math.random()` の直呼び禁止)
+- CPU は `Agent: (公開情報, 自分の秘密情報) -> Action` インターフェースで実装する
+- バランス定数はすべて設定ファイルに外出しし、`src/sim/` の自動対戦で検証する
 
 ## モデル運用方針(司令塔 = Opus / 委譲 = Sonnet・Haiku)
 

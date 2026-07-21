@@ -1,12 +1,16 @@
 import { defineConfig } from 'vitest/config';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 
 export default defineConfig({
+  plugins: [svelte()],
   test: {
     globals: true,
+    // ゲームロジックは純粋なリデューサで DOM に依存しないため既定は node。
+    // Svelte コンポーネントのテストを書く際は該当ファイルで環境を切り替える。
     environment: 'node',
     include: [
-      'src/**/*.{test,spec}.{ts,tsx}',
-      'tests/**/*.{test,spec}.{ts,tsx}',
+      'src/**/*.{test,spec}.{ts,svelte.ts}',
+      'tests/**/*.{test,spec}.ts',
     ],
     coverage: {
       provider: 'v8',

@@ -44,6 +44,10 @@ jobs:
       - name: Test
         run: npm test
 
+      # 静的サイトとして Cloudflare Pages にデプロイするため、ビルド破損は CI で止める
+      - name: Build
+        run: npm run build
+
       - name: Secret scan
         run: npx secretlint "**/*"
 

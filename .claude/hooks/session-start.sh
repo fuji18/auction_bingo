@@ -35,8 +35,8 @@ done
 # しきい値と判断材料・再導入手順は .claude/docs/serena-reintroduction.md を参照
 # (.mcp.json には context7 等の他サーバーもあるため、serena エントリの有無で判定する)
 if [ "$SOURCE" = "startup" ] && ! grep -qs '"serena"' .mcp.json; then
-  TS_FILES="$(git ls-files '*.ts' '*.tsx' 2>/dev/null | wc -l)"
-  TS_LOC="$(git ls-files '*.ts' '*.tsx' 2>/dev/null | xargs -r cat 2>/dev/null | wc -l)"
+  TS_FILES="$(git ls-files '*.ts' '*.tsx' '*.svelte' 2>/dev/null | wc -l)"
+  TS_LOC="$(git ls-files '*.ts' '*.tsx' '*.svelte' 2>/dev/null | xargs -r cat 2>/dev/null | wc -l)"
   if [ "${TS_LOC:-0}" -gt 30000 ] || [ "${TS_FILES:-0}" -gt 300 ]; then
     echo "コード規模が serena MCP 再導入の目安を超えた(TS: ${TS_LOC} 行 / ${TS_FILES} ファイル)。.claude/docs/serena-reintroduction.md を読み、再導入をユーザーに提案すること"
   fi

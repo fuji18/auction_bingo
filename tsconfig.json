@@ -1,22 +1,23 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "lib": ["ES2022"],
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals", "vite/client"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/**/*.svelte", "tests/**/*.ts", "*.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -6,7 +6,7 @@ set -uo pipefail
 
 f="$(jq -r '.tool_response.filePath // .tool_input.file_path // empty' 2>/dev/null)"
 case "$f" in
-  *.ts | *.tsx | *.js | *.mjs | *.cjs) ;;
+  *.ts | *.tsx | *.svelte | *.js | *.mjs | *.cjs) ;;
   *) exit 0 ;;
 esac
 
