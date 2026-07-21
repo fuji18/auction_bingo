@@ -294,9 +294,10 @@ export function legalActions(state: GameState, playerId: PlayerId): Action[] | A
 
 **責務**: 意思決定。`Agent` インターフェースを実装する。
 
+**人間プレイヤーに対応する `Agent` 実装は作らない。** 人間の手番ではアクションが UI から直接 `reduce` に渡るため、`Agent` を経由させる意味がない。「誰が `Agent` で誰が UI 入力か」を決めるのは `core/` ではなく呼び出し側(`ui/` または `sim/`)の責務とする。P2 のオンライン対戦でリモートプレイヤーを追加するときも同じ構図になる。
+
 ```
 agents/
-├ human.ts     UI からのアクションを待つ(実体はプレースホルダ)
 ├ leo.ts       猪突型
 ├ sara.ts      追随型
 └ baseline/    シミュレーション専用の戦略(貯め込み / 全力入札 / スキル不買 / ランダム)

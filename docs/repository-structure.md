@@ -86,6 +86,8 @@ src/agents/
 
 **命名規則**: CPU キャラクターはキャラクター名を camelCase で(`leo.ts` / `sara.ts`)。戦略は振る舞いを表す名前で(`hoarder.ts`)。
 
+**`human.ts` は作らない。** 人間の手番ではアクションが UI から直接 `reduce` に渡るため、`Agent` を経由させる意味がない。座席のうちどれが `Agent` でどれが UI 入力かを決めるのは、`core/` ではなく呼び出し側(`ui/` / `sim/`)の責務とする。
+
 **依存関係**:
 - 依存可能: `src/core/` の**型と純粋関数のみ**
 - 依存禁止: `src/ui/` / `src/sim/` / `svelte`
@@ -268,14 +270,20 @@ favicon、OGP 画像など。**Vite がそのまま `dist/` にコピーする�
 
 ### レイヤー間の依存
 
-```
-       ui/          sim/
-        │            │
-        ├──────┬─────┤
-        ▼      ▼     ▼
-      agents/  →   core/
-                     ▲
-                     └── 何にも依存しない
+```mermaid
+graph TD
+    ui["ui/"]
+    sim["sim/"]
+    agents["agents/"]
+    core["core/<br/>(何にも依存しない)"]
+
+    ui --> agents
+    ui --> core
+    sim --> agents
+    sim --> core
+    agents --> core
+
+    style core fill:#2d6a4f,color:#fff
 ```
 
 **許可される依存**:

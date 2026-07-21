@@ -100,13 +100,19 @@
     'no-restricted-properties': ['error',
       { object: 'Math', property: 'random' },
       { object: 'Date', property: 'now' }],
-    'no-restricted-imports': ['error', { patterns: ['**/ui/**', 'svelte', 'svelte/*'] }],
+    'no-restricted-imports': ['error', { patterns: ['**/ui/**', '**/sim/**', 'svelte', 'svelte/*'] }],
   },
 },
 {
   files: ['src/core/**/*.ts'],
   rules: {
     'no-restricted-imports': ['error', { patterns: ['**/ui/**', '**/agents/**', '**/sim/**', 'svelte', 'svelte/*'] }],
+  },
+},
+{
+  files: ['src/sim/**/*.ts'],
+  rules: {
+    'no-restricted-imports': ['error', { patterns: ['**/ui/**', 'svelte', 'svelte/*'] }],
   },
 }
 ```
@@ -136,7 +142,7 @@
   - 復元中に reduce が不正アクションとして拒否した
 ```
 
-破棄時はセーブを削除して新規ゲームを開始し、ユーザーには「保存データを読み込めませんでした」と表示する。**部分的な復旧は試みない。** 中途半端に壊れた state で遊ばせるより、作り直させるほうが安全であり、実装も単純になる。
+破棄時はセーブを削除して新規ゲームを開始し、ユーザーには「保存データを読み込めませんでした。新しいゲームを開始します」と表示する(UI 文言の正典は `docs/functional-design.md` の「エラーハンドリング」表とする)。**部分的な復旧は試みない。** 中途半端に壊れた state で遊ばせるより、作り直させるほうが安全であり、実装も単純になる。
 
 ### バックアップ戦略
 
@@ -149,10 +155,12 @@
 | 操作 | 目標時間 | 測定環境 |
 |------|---------|---------|
 | 初回ロード(操作可能になるまで) | 3秒以内 | 4G 回線相当・キャッシュなし・中位のスマートフォン |
-| `reduce` 1ターン分の計算 | 10ms 以内 | 開発機 |
+| `reduce` 1ターン分の計算 | 10ms 以内(**UI 上の上限**) | 開発機 |
 | 提出から解決結果の表示まで | 500ms 以内 | 実機。演出時間を含む |
 | 盤面のマーク反映 | 16ms 以内(1フレーム) | 実機 |
 | 自動対戦 1万戦 | 5分以内 | 開発機・単一プロセス |
+
+**「1ターン 10ms 以内」は UI 上の体感を守るための上限であり、実測目標ではない。** 実質的な性能要件はシミュレーション側から決まる。1万戦を5分以内(1ゲーム 30ms 以内)、期待ターン数が約18であることから逆算すると、**1ターンあたり 1.7ms 以内**が実際に満たすべき水準になる。UI 側の 10ms はここに約6倍の余裕を見た値であり、両者は矛盾しない。
 
 ### リソース使用量
 
@@ -256,7 +264,9 @@ P0 のスコープでは導入しない。UI 実装フェーズで必要性が�
 
 ### CI で実行するもの
 
-`npm run lint` / `npm run typecheck` / `npm test` / `npm run format:check` / `npm run build` / `npx secretlint`。push と PR ごとに実行する。
+`npm run lint` / `npm run typecheck` / `npm test` / `npm run format:check` / `npm run build` / `npx secretlint` / `npm audit --audit-level=high`(非ブロッキング)/ ハーネス整合検証(フックの実行権限と `settings.json` の構文)。
+
+`main` / `develop` への push と、**対象ブランチを問わずすべての PR** で実行する。Claude による自動コードレビュー(`claude-code-review.yml`)はこれとは別で、`main` 向け PR のオープン時と ready_for_review 時のみ起動する。
 
 ## 技術的制約
 
