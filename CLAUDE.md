@@ -64,6 +64,8 @@
 4. 使用するライブラリの API 仕様が不確かなとき(メジャーバージョン更新直後・知識カットオフ以降のリリース等)は Context7(`mcp__context7__*`)で最新ドキュメントを引く(WebSearch での検索→全文取得の往復より安い。確信があるなら引かない)
 5. 既存パターンを理解してから実装開始
 
+**本リポジトリはハブ `fujioha_platform` に公開するスポークであるため、実装時は必ず `docs/playbook/spoke-development-standards.md`(開発段階で満たすべき構成ルール)と、ハブ側の `docs/playbook/add-new-spoke.md`(登録・デプロイ手順)を読み、MUST 項目と公開前セルフチェックリストに従う。**
+
 #### プロジェクト開始時(技術スタック整合)
 
 `docs/ideas/` の技術選定がテンプレート既定(Node.js/TypeScript)と異なる場合、実装を始める前に検証コマンド・devcontainer・TSツールチェーンの置換をタスク化し、CLAUDE.mdの技術スタック節を更新する(`/kickoff` フェーズ1が担当)。
