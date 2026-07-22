@@ -140,6 +140,27 @@ export type Action =
   /** value が null のときはパス。 */
   | { type: 'CHOOSE'; playerId: PlayerId; value: number | null };
 
+/**
+ * `legalActions` が返す、現 phase で取り得る入力範囲。UI の入力ガード用で、
+ * この範囲を超えるアクションは reduce が no-op で拒否する。
+ * CPU(#8)は PublicView / SecretView から同じ範囲を導く。
+ */
+export type ActionSpec =
+  | {
+      phase: 'submitting';
+      playerId: PlayerId;
+      /** 各スキル(無しを含む)を選んだときの入札上限 = coins - cost。cost > coins のスキルは含めない。 */
+      options: { skill: SkillId | null; maxBid: number }[];
+    }
+  | { phase: 'vision'; playerId: PlayerId; peeked: number[] }
+  | {
+      phase: 'choosing';
+      playerId: PlayerId;
+      candidates: number[];
+      canPass: true;
+    }
+  | { phase: 'finished' };
+
 export interface Standing {
   playerId: PlayerId;
   reachCount: number;
