@@ -13,6 +13,8 @@
       "Bash(npm run:*)",
       "Bash(npm ci:*)",
       "Bash(npx tsc:*)",
+      "Bash(npx svelte-check:*)",
+      "Bash(npx vite:*)",
       "Bash(npx vitest:*)",
       "Bash(npx eslint:*)",
       "Bash(npx prettier:*)",

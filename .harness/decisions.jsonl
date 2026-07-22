@@ -1,0 +1,4 @@
+{"ts": "2026-07-22T00:00:00Z", "topic": "UIフレームワーク", "decision": "Svelte 5 + Vite の静的Webアプリ", "why": "fujioha_platform のスポーク標準(既存 kanji_gacha と同構成)への整合。React だとスポーク間で別FWを保守することになる", "refs": ["docs/architecture.md"]}
+{"ts": "2026-07-22T00:00:00Z", "topic": "予知の山札除去", "decision": "落札者が選んだ数字(T±n)は山札から除去しない。除去するのはTのみ", "why": "選択数字も除去すると1ターン最大2枚減り、40枚の山札が25ターン持たない可能性。既マーク数字の再出現頻度はsimで計測する", "refs": ["docs/functional-design.md#未解決の設計判断"]}
+{"ts": "2026-07-22T00:00:00Z", "topic": "ブランチ戦略", "decision": "feature/* -> develop -> main の2段構成", "why": "ユーザー指定。CI(lint/型/test)は全PRで走るが、Claude自動レビューはmain向けPRのみ。feature の主レビューは実装中のcode-reviewer subagentが担う", "refs": ["docs/development-guidelines.md#Git運用ルール"]}
+{"ts": "2026-07-22T00:00:00Z", "topic": "レイヤー依存の強制", "decision": "core/agents の副作用禁止・越境import禁止をESLintでエラー化し、最初の実装チケット(#4)の成果物に含める", "why": "レビューの目視では必ず漏れる。後入れだと既存違反の掃除が発生する", "refs": ["docs/architecture.md#依存規則の機械的な強制"]}

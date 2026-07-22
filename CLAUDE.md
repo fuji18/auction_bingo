@@ -31,6 +31,7 @@
 - **Fable 5 は最難関タスクのみ**(難度の高い設計、根本原因不明の調査)。`/model fable` で一時切替し、完了後 `/model opus` に戻す
 - Agent Teams を使う場合、teammates は Sonnet を指定する(spawn プロンプトに明記)
 - ハーネス層の追加・更新は `/harness-setup` を使う
+- 横断的な技術判断(スタック選定・ルールの仮決め等)は `.harness/decisions.jsonl` に1行 JSON で追記する(削除禁止)。バランス調整の数値記録はコミットメッセージに残す
 
 ## スペック駆動開発の基本原則
 

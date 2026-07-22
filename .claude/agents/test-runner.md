@@ -17,7 +17,7 @@ model: haiku
 
 1. `docs/development-guidelines.md` の検証コマンド定義(プロジェクトの正)
 2. `package.json` の `scripts`(`lint`, `typecheck`, `test`, `format`。類似名も柔軟に判断)
-3. 代替検出: `npx tsc --noEmit`(tsconfig.json)、`npx vitest run`(vitest.config.ts)、`npx eslint .`(eslint.config.js)、`npx prettier --check .`(.prettierrc)、`./gradlew lint` / `./gradlew test`(build.gradle)、`pytest`(pyproject.toml)
+3. 代替検出: `npx svelte-check --tsconfig ./tsconfig.json`(svelte.config.js。**本プロジェクトの typecheck は tsc ではなく svelte-check**)、`npx vitest run`(vitest.config.ts)、`npx eslint .`(eslint.config.js)、`npx prettier --check .`(.prettierrc)、`npx tsc --noEmit`(svelte-check が無い純 TS プロジェクトのみ)、`./gradlew lint` / `./gradlew test`(build.gradle)、`pytest`(pyproject.toml)
 
 特定できないチェックはスキップし、その旨をサマリーに含める。
 
