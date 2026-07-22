@@ -88,7 +88,7 @@ export default tseslint.config(
   {
     // シミュレーション・スクリプトは Node 環境で実行する(console は許可)。
     // ただし ui/ と svelte への依存は禁止する。
-    files: ['src/sim/**/*.ts', 'scripts/**/*.ts'],
+    files: ['src/sim/**/*.ts', 'scripts/**/*.ts', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: { ...globals.node },
     },

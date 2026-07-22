@@ -13,6 +13,7 @@ auction_bingo/
 │   ├── ui/                   # Svelte コンポーネント
 │   └── main.ts               # エントリポイント
 ├── tests/                    # 統合テスト(ユニットテストは src/ に同居)
+├── scripts/                  # ビルド外の実行支援(TS 直接実行用 Node ESM ローダ)
 ├── docs/                     # 永続ドキュメント6点 + ideas/
 ├── public/                   # 静的アセット(favicon 等)
 ├── .steering/                # 作業単位の計画とタスクリスト(★コミットする)
@@ -117,6 +118,10 @@ src/sim/
 ```bash
 npm run sim -- --games 10000 --seed 1 --agents leo,sara,hoarder
 ```
+
+TS をビルドせず直接実行するため、`scripts/`(ルート直下)の Node ESM ローダ
+(`ts-loader.mjs` = 拡張子なし import を `.ts` に補完する resolve フック / `register-loader.mjs` = その登録エントリ)を
+`node --import` 経由で噛ませる。Node 24 のネイティブ型ストリップと併用し、新規 npm 依存を増やさない。
 
 **この層だけは `console` の使用を許可する**(CLI の出力手段であるため)。ESLint の制限は `core/` と `agents/` にのみ適用する。
 

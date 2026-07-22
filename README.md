@@ -32,16 +32,16 @@ npm run dev        # 開発サーバー http://localhost:4330
 
 ## コマンド
 
-| コマンド                                    | 内容                               |
-| ------------------------------------------- | ---------------------------------- |
-| `npm run dev`                               | 開発サーバー(port 4330)            |
-| `npm run build`                             | 静的ビルド → `dist/`               |
-| `npm run preview`                           | ビルド結果の確認                   |
-| `npm run lint` / `lint:fix`                 | ESLint                             |
-| `npm run typecheck`                         | svelte-check                       |
-| `npm test` / `test:watch` / `test:coverage` | Vitest                             |
-| `npm run format` / `format:check`           | Prettier                           |
-| `npm run sim`(実装後)                       | 自動対戦シミュレーション(KPI 計測) |
+| コマンド                                           | 内容                                                                                          |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `npm run dev`                                      | 開発サーバー(port 4330)                                                                       |
+| `npm run build`                                    | 静的ビルド → `dist/`                                                                          |
+| `npm run preview`                                  | ビルド結果の確認                                                                              |
+| `npm run lint` / `lint:fix`                        | ESLint                                                                                        |
+| `npm run typecheck`                                | svelte-check                                                                                  |
+| `npm test` / `test:watch` / `test:coverage`        | Vitest                                                                                        |
+| `npm run format` / `format:check`                  | Prettier                                                                                      |
+| `npm run sim -- --games N --seed S --agents a,b,c` | 自動対戦シミュレーション(KPI 計測)。既定は `--games 10000 --seed 1 --agents leo,sara,hoarder` |
 
 ## ドキュメント
 
