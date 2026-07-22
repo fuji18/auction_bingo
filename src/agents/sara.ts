@@ -71,6 +71,7 @@ function plannedBid(pub: PublicView, sec: SecretView): number {
 }
 
 export const sara: Agent = {
+  tendency: '追随して差し込む型。直前の落札額に少し上乗せして刺す。',
   submit(pub, sec) {
     return { skill: finalSkill(pub, sec), bid: plannedBid(pub, sec) };
   },

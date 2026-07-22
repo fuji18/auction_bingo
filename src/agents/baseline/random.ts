@@ -23,6 +23,7 @@ function pick<T>(rng: RngState, items: readonly T[]): [T, RngState] {
 }
 
 export const random: Agent = {
+  tendency: 'ランダム型。合法な範囲でスキル・入札・数字選択を無作為に選ぶ。',
   submit(pub, sec) {
     const coins = coinsOf(pub, sec.playerId);
     const options = feasibleSkills(pub, coins);

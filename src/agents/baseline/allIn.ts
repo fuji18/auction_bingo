@@ -8,6 +8,7 @@ import type { Agent } from '../types';
 import { chooseNumber, coinsOf, makeTell, selectVision } from '../shared';
 
 export const allIn: Agent = {
+  tendency: '全力入札型。常に全コインを入札・スキル無し。',
   submit(pub, sec) {
     return { skill: null, bid: coinsOf(pub, sec.playerId) };
   },

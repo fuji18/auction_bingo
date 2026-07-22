@@ -11,6 +11,12 @@
 import type { PublicView, SecretView, SkillId } from '../core/types';
 
 export interface Agent {
+  /**
+   * この CPU の意思決定の傾向を説明する一文(UI 表示用。意思決定には影響しない)。
+   * 傾向文言の単一情報源。UI はここを参照し、コメントに文言を重複させない
+   * (docs/product-requirements.md「5. CPU 対戦相手」受け入れ条件)。
+   */
+  tendency: string;
   submit(
     pub: PublicView,
     sec: SecretView

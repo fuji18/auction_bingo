@@ -7,7 +7,11 @@
 </script>
 
 {#if text}
-  <span class="tell" aria-label="CPU の様子">「{text}」</span>
+  <span
+    class="tell"
+    aria-label="CPU の様子(確率的なヒントで確定情報ではありません)"
+    title="テルは確率的なヒントで、確定情報ではありません">「{text}」</span
+  >
 {/if}
 
 <style>
