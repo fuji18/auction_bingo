@@ -66,6 +66,23 @@
     </span>
   </header>
 
+  <details class="fairness">
+    <summary>このゲームの CPU について(フェアネス)</summary>
+    <ul>
+      <li>名前の下の傾向文は、各 CPU の意思決定のクセを説明したものです。</li>
+      <li>
+        提出前に出る 1 語のテル(例:「強気」「様子見」)は<strong
+          >確率的なヒント</strong
+        >で、確定情報ではありません。実際の入札とずれることがあります。
+      </li>
+      <li>
+        CPU は<strong
+          >非公開情報(他者の入札・山札・他者の予知結果)を参照しません</strong
+        >。自分に見える公開情報と自分の秘密情報だけで手を決めます。
+      </li>
+    </ul>
+  </details>
+
   <section class="target" aria-label="今ターンのターゲット">
     <span class="tlabel">ターゲット</span>
     <span class="tval">{game.state.target}</span>
@@ -80,6 +97,9 @@
           <span class="pcoins">🪙{p.coins}</span>
           {#if tokenHolder === p.id}<TokenMark />{/if}
           {#if p.id !== HUMAN}<TellBadge text={game.tellOf(p.id)} />{/if}
+          {#if p.id !== HUMAN}
+            <span class="tendency">{game.tendencyOf(p.id)}</span>
+          {/if}
         </div>
         <BoardView
           board={p.board}
@@ -218,6 +238,30 @@
   }
   .pname {
     font-weight: 700;
+  }
+  .tendency {
+    flex-basis: 100%;
+    font-size: 0.72rem;
+    opacity: 0.65;
+    line-height: 1.3;
+  }
+  .fairness {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, currentColor 6%, transparent);
+  }
+  .fairness summary {
+    cursor: pointer;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+  .fairness ul {
+    margin: 0.4rem 0 0.1rem;
+    padding-inline-start: 1.1rem;
+    display: grid;
+    gap: 0.3rem;
+    opacity: 0.85;
   }
   .pcoins {
     font-variant-numeric: tabular-nums;

@@ -29,6 +29,7 @@ function plannedBid(pub: PublicView, sec: SecretView): number {
 }
 
 export const noSkill: Agent = {
+  tendency: 'スキル不買型。スキルを一切買わず、入札のみで戦う。',
   submit(pub, sec) {
     return { skill: null, bid: plannedBid(pub, sec) };
   },

@@ -88,6 +88,11 @@ export class Game {
     return agent.tell(toPublicView(this.state), toSecretView(this.state, id));
   }
 
+  /** CPU の傾向を説明する一文。人間座席は空文字。 */
+  tendencyOf(id: PlayerId): string {
+    return CPU_AGENTS[id]?.tendency ?? '';
+  }
+
   // ---- 人間の手番(UI から呼ぶ) ----
 
   submit(skill: SkillId | null, bid: number): void {

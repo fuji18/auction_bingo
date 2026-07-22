@@ -64,6 +64,7 @@ function plannedBid(pub: PublicView, sec: SecretView): number {
 }
 
 export const leo: Agent = {
+  tendency: '序盤に積む猪突型。序盤は強く入札し、後半は息切れする。',
   submit(pub, sec) {
     return { skill: finalSkill(pub, sec), bid: plannedBid(pub, sec) };
   },

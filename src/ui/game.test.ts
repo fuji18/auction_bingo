@@ -81,6 +81,15 @@ describe('Game(UI ドライバ)', () => {
     expect(game.state.turn).toBe(1);
   });
 
+  it('CPU 座席は傾向文を返し, 人間座席は空文字を返す', () => {
+    const game = new Game(fakeStorage());
+    // p1=レオ / p2=サラ は非空の傾向文を持つ(UI の常時表示の情報源)。
+    expect(game.tendencyOf('p1').length).toBeGreaterThan(0);
+    expect(game.tendencyOf('p2').length).toBeGreaterThan(0);
+    // 人間(p0)には Agent が無いので空文字。
+    expect(game.tendencyOf('p0')).toBe('');
+  });
+
   it('不正手(範囲外の入札)は no-op で state を変えない', () => {
     const game = new Game(fakeStorage());
     const before = game.state.turn;
