@@ -15,6 +15,6 @@
 - [x] sara.test.ts
 - [x] baseline.test.ts
 - [x] `npm test`(141 passed)/ `tsc --noEmit` clean
-- [ ] `npm run lint` / `npm run typecheck`(svelte-check)/ `npm run build`(classifier 復旧待ちで再実行)
-- [ ] code-reviewer + test-runner 検証
-- [ ] コミット・PR(base: develop)
+- [x] `npm run lint`(0)/ `npm run typecheck`(svelte-check 0 errors)/ `npm run build`(成功)
+- [~] code-reviewer + test-runner 検証 — Sonnet 一時停止中のため未実行。機械検証(lint/type/test/build/format)で代替
+- [x] コミット・PR(base: develop)— PR #19 / Issue #8 にコメント記録済み
