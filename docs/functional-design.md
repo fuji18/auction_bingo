@@ -495,14 +495,16 @@ paid ← winner.bid
 winner.coins -= paid
 winner.coins -= (winner のスキルが shift または greed なら そのコスト)   // ★落札時のみ徴収
 each loser:
-    received ← floor(paid / distributionDivisor)
-    loser.coins ← min(loser.coins + received, coinCap)
+    received ← min(loser.coins + floor(paid / distributionDivisor), coinCap) - loser.coins  // 実受取(coinCap クランプ後)
+    loser.coins += received
 toBank ← paid - (received の総和)
 落札できなかった者の shift / greed の予約を解除して返金する   → SkillRefunded
 全員の reserved をクリアする
 ```
 
-**分配の例**: `paid = 10`, `divisor = 4` → 各敗者 `floor(10/4) = 2` 枚、2人で 4 枚、銀行が 6 枚回収。**入札額の 6 割が経済から消える**ため、コインが際限なく循環せず実効的なシンクとして働く。
+`received` は **coinCap でクランプした後の実受取額**とし、`Settled` イベントにもこの実受取額を載せる。これにより `paid == Σreceived + toBank` が常に厳密に成立する(クランプで受け取れなかった差分は銀行回収 `toBank` に合算されて経済から消える)。
+
+**分配の例**: `paid = 10`, `divisor = 4`(クランプ無し)→ 各敗者 `floor(10/4) = 2` 枚、2人で 4 枚、銀行が 6 枚回収。**入札額の 6 割が経済から消える**ため、コインが際限なく循環せず実効的なシンクとして働く。
 
 #### ステップ7: ビンゴ判定
 
