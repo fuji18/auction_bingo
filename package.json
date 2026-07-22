@@ -19,7 +19,8 @@
     "typecheck": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage --passWithNoTests"
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "sim": "node --import ./scripts/register-loader.mjs src/sim/run.ts"
   },
   "keywords": [
     "board-game",
