@@ -66,7 +66,8 @@ export class Game {
 
   constructor(storage: Storage = localStorage) {
     this.storage = storage;
-    this.restoreOrNew();
+    // 構築時はゲームを開始も保存もしない。開始は呼び出し側(タイトル画面)が
+    // newGame()(はじめる)か resume()(つづきから)で明示する。
   }
 
   // ---- 表示用ゲッター(reactive、this.state を読むので自動追跡) ----
@@ -91,6 +92,11 @@ export class Game {
   /** CPU の傾向を説明する一文。人間座席は空文字。 */
   tendencyOf(id: PlayerId): string {
     return CPU_AGENTS[id]?.tendency ?? '';
+  }
+
+  /** 復元可能な進行中セーブがあるか。タイトルの「つづきから」表示条件。 */
+  hasSave(): boolean {
+    return loadGame(this.storage) !== null;
   }
 
   // ---- 人間の手番(UI から呼ぶ) ----
@@ -214,28 +220,31 @@ export class Game {
     }
   }
 
-  /** 保存があれば復元、無ければ・壊れていれば新規開始する。 */
-  private restoreOrNew(): void {
+  /**
+   * 進行中セーブを復元する(つづきから)。復元できたら true。
+   * セーブが無い/復元できない場合は false を返す(新規への自動フォールバックはしない)。
+   * reduce が例外を投げる不正セーブは破棄する。
+   */
+  resume(): boolean {
     const saved = loadGame(this.storage);
-    if (saved) {
-      try {
-        const restored = reduce(
-          createGame(DEFAULT_CONFIG, saved.seed),
-          saved.actions
-        );
-        this.seed = saved.seed;
-        this.actions = [...saved.actions];
-        this.state = restored.state;
-        // 復元後もその局面の直近ターンの解決ログを見せる(リロードでログだけ消えない)。
-        this.recent = lastTurnEvents(restored.state.log);
-        // 保存は人間手番後なので通常は何もしないが、念のため整える。
-        this.driveCpu();
-        this.persist();
-        return;
-      } catch {
-        clearGame(this.storage);
-      }
+    if (!saved) return false;
+    try {
+      const restored = reduce(
+        createGame(DEFAULT_CONFIG, saved.seed),
+        saved.actions
+      );
+      this.seed = saved.seed;
+      this.actions = [...saved.actions];
+      this.state = restored.state;
+      // 復元後もその局面の直近ターンの解決ログを見せる(リロードでログだけ消えない)。
+      this.recent = lastTurnEvents(restored.state.log);
+      // 保存は人間手番後なので通常は何もしないが、念のため整える。
+      this.driveCpu();
+      this.persist();
+      return true;
+    } catch {
+      clearGame(this.storage);
+      return false;
     }
-    this.newGame();
   }
 }

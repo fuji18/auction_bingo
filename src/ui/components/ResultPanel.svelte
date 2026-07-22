@@ -11,10 +11,12 @@
     result: GameResult;
     /** リプレイ表示へ切り替える。 */
     onreplay: () => void;
-    /** 新しいゲームを開始する。 */
+    /** 新しいゲームを開始する(もう一度)。 */
     onnewgame: () => void;
+    /** タイトル画面へ戻る。 */
+    ontitle: () => void;
   }
-  let { result, onreplay, onnewgame }: Props = $props();
+  let { result, onreplay, onnewgame, ontitle }: Props = $props();
 
   const HUMAN: PlayerId = 'p0';
   let winnerSet = $derived(new Set(result.winners));
@@ -86,8 +88,9 @@
       手の内を見る(リプレイ)
     </button>
     <button type="button" class="newgame" onclick={onnewgame}>
-      新しいゲーム
+      もう一度
     </button>
+    <button type="button" class="title" onclick={ontitle}> タイトルへ </button>
   </div>
 </div>
 
@@ -164,5 +167,8 @@
   }
   .newgame {
     background: seagreen;
+  }
+  .title {
+    background: color-mix(in srgb, currentColor 55%, transparent);
   }
 </style>
