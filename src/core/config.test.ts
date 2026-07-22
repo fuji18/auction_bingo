@@ -51,6 +51,12 @@ describe('validateConfig', () => {
     expect(() => validateConfig(config)).toThrow(/pickPerColumn/);
   });
 
+  it('pickPerColumn が盤面サイズと一致しないと throw する', () => {
+    const config = cloneConfig();
+    config.board.pickPerColumn = 4; // size(5)と不一致
+    expect(() => validateConfig(config)).toThrow(/盤面サイズ/);
+  });
+
   it('列数が盤面サイズと一致しないと throw する', () => {
     const config = cloneConfig();
     config.board.columns = [
