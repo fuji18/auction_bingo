@@ -298,8 +298,10 @@ export function legalActions(state: GameState, playerId: PlayerId): Action[] | A
 
 ```
 agents/
+├ registry.ts  名前 → Agent の生成(createAgent)
 ├ leo.ts       猪突型
 ├ sara.ts      追随型
+├ shared.ts    CPU 共通の意思決定ロジック
 └ baseline/    シミュレーション専用の戦略(貯め込み / 全力入札 / スキル不買 / ランダム)
 ```
 

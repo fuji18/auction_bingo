@@ -47,10 +47,18 @@ src/core/
 ├── rng.test.ts
 ├── board.ts             # 盤面生成・マーク・ライン判定
 ├── board.test.ts
-├── reduce.ts            # 唯一の状態遷移。createGame / reduce / legalActions
+├── reduce.ts            # 唯一の状態遷移。createGame / reduce / legalActions(resolve/ を束ねるファサード)
 ├── reduce.test.ts
 ├── view.ts              # GameState → PublicView / SecretView の射影
-└── view.test.ts
+├── view.test.ts
+└── resolve/             # ターン解決の各ステップ(reduce.ts から分割)
+    ├── turn.ts          # ターン進行の制御
+    ├── submit.ts        # 入札・アクションの受付
+    ├── vision.ts        # 予知の解決
+    ├── auction.ts       # 競り(オークション)の解決
+    ├── settle.ts        # 分配・強奪などの決済
+    ├── result.ts        # 決着判定
+    └── shared.ts        # resolve 内の共通ヘルパ
 ```
 
 **命名規則**:
@@ -73,11 +81,16 @@ src/core/
 ```
 src/agents/
 ├── types.ts             # Agent インターフェース
+├── registry.ts          # 名前 → Agent の生成(createAgent)。sim/ から利用する公開 API
 ├── leo.ts               # 猪突型
 ├── leo.test.ts
 ├── sara.ts              # 追随型
 ├── sara.test.ts
+├── shared.ts            # CPU 共通の意思決定ロジック(desire / bestLine / tell 等)
+├── shared.test.ts
 ├── constants.ts         # CPU の閾値・係数(★シミュレーションで調整する値)
+├── testkit.ts           # テスト用ビルダ・対局ドライバ
+├── baseline.test.ts
 └── baseline/            # シミュレーション専用の戦略
     ├── hoarder.ts       # 常に貯め込む
     ├── allIn.ts         # 常に最大入札
@@ -134,6 +147,7 @@ src/ui/
 ├── App.svelte
 ├── global.css
 ├── game.svelte.ts           # runes による state 保持。reduce を呼ぶだけ
+├── game.test.ts
 ├── storage.ts               # localStorage への保存・復元
 ├── storage.test.ts
 ├── components/
@@ -336,7 +350,7 @@ types.ts ← config.ts ← rng.ts ← board.ts ← reduce.ts
 - 300〜500行でリファクタリングを検討。
 - 500行以上は分割を強く推奨。
 
-**`reduce.ts` は肥大化しやすい**(ターン解決の7ステップすべてを含むため)。500行を超えたら、ステップ単位で `core/resolve/` 配下に分割する。分割してもエクスポートする関数は `reduce` 1つに保ち、外から見た形を変えない。
+**`reduce.ts` は肥大化しやすい**(ターン解決の各ステップを含むため)。issue #7 で500行を超えたため、ステップ単位で `core/resolve/` 配下に分割済み(現 `reduce.ts` はそれらを束ねるファサード)。分割してもエクスポートする関数は `reduce` 1つに保ち、外から見た形を変えない。
 
 ## 除外設定
 
