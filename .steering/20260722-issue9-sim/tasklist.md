@@ -33,7 +33,7 @@ Issue #9: シミュレーション基盤とKPI計測
 - [x] `/check`(test-runner に委譲)の全チェックがパス(lint/typecheck/test/format)
 - [x] `npm run build` が通る
 - [x] 1 万戦を実行し所要時間 < 5 分を確認、KPI 初回結果を取得(2.86s / leo,sara,hoarder)
-- [ ] KPI 初回結果を Issue #9 にコメントで残す(PR 作成後)
+- [x] KPI 初回結果を Issue #9 にコメントで残す(PR 作成後)
 
 ## フェーズ7: ドキュメント更新
 
