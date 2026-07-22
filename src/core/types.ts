@@ -1,9 +1,10 @@
 /**
  * ゲーム状態・イベント・ビューの型を集約する。
  *
- * 型定義はファイルごとに分散させず、このファイルへ集約する
- * (docs/functional-design.md「データモデル定義」節)。
- * バランス定数 `BalanceConfig` のみ、値と検証と凝集させるため config.ts に置く。
+ * データモデルの型はファイルごとに分散させず、このファイルへ集約する
+ * (docs/functional-design.md「データモデル定義」節)。例外は 2 つ:
+ * バランス定数 `BalanceConfig` は値と検証と凝集させるため config.ts に置き、
+ * 意思決定インターフェース `Agent` は agents/ 層に属するため agents/types.ts に置く。
  */
 
 import type { BalanceConfig } from './config';
@@ -194,22 +195,5 @@ export interface SecretView {
   visionPeek: number[] | null;
 }
 
-/**
- * CPU の意思決定インターフェース。GameState 全体ではなく
- * PublicView / SecretView のみを受け取ることで、非公開情報の参照を構造的に防ぐ。
- * 人間プレイヤーに対応する Agent 実装は作らない(手番は UI から直接 reduce に渡る)。
- */
-export interface Agent {
-  submit(
-    pub: PublicView,
-    sec: SecretView
-  ): { skill: SkillId | null; bid: number };
-  chooseNumber(
-    pub: PublicView,
-    sec: SecretView,
-    candidates: number[]
-  ): number | null;
-  selectVision(pub: PublicView, sec: SecretView, peeked: number[]): number;
-  /** UI 表示用。意思決定には影響しない。 */
-  tell(pub: PublicView, sec: SecretView): string;
-}
+// CPU の意思決定インターフェース `Agent` は意思決定層に属するため
+// `src/agents/types.ts` に定義する(データモデルの型のみをこのファイルに集約する)。
