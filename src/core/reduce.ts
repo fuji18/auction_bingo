@@ -37,6 +37,7 @@ import {
   findSubmission,
   numberBounds,
   skillCost,
+  skillRange,
 } from './resolve/shared';
 import { applySubmit, resolveAfterSubmit } from './resolve/submit';
 import { startTurn } from './resolve/turn';
@@ -181,4 +182,24 @@ export function legalActions(state: GameState, playerId: PlayerId): ActionSpec {
   // choosing
   const candidates = state.auctionWinner === playerId ? state.candidates : [];
   return { phase: 'choosing', playerId, candidates, canPass: true };
+}
+
+/**
+ * そのスキルを買って落札した場合に「選べるようになる数字」の候補を返す(UI プレビュー用)。
+ * `target ± skillRange(skill)` を数字プールの範囲でクランプする(openAuction の候補算出と同一)。
+ *
+ * ルール(範囲拡張)由来のため core が所有する。UI で target±range を再計算すると
+ * ルールの二重定義になるため、ここに集約する。純粋なクエリで state は変えない。
+ */
+export function previewCandidates(
+  state: GameState,
+  skill: SkillId | null
+): number[] {
+  const range = skillRange(skill);
+  const [min, max] = numberBounds(state.config);
+  const candidates: number[] = [];
+  for (let v = state.target - range; v <= state.target + range; v++) {
+    if (v >= min && v <= max) candidates.push(v);
+  }
+  return candidates;
 }

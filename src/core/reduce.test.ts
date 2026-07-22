@@ -7,7 +7,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { DEFAULT_CONFIG } from './config';
-import { createGame, reduce, legalActions } from './reduce';
+import { createGame, reduce, legalActions, previewCandidates } from './reduce';
 import type { Action, Board, Cell, GameEvent, GameState } from './types';
 
 function cell(value: number, marked = false): Cell {
@@ -526,5 +526,36 @@ describe('legalActions', () => {
     const base = createGame(DEFAULT_CONFIG, 1);
     const finished = { ...base, phase: 'finished' as const };
     expect(legalActions(finished, 'p0')).toEqual({ phase: 'finished' });
+  });
+});
+
+describe('previewCandidates', () => {
+  it('スキル無し(range 0)は target のみ', () => {
+    const state = submitState({ target: 20 });
+    expect(previewCandidates(state, null)).toEqual([20]);
+  });
+
+  it('偏向(±1)は target を中心に 3 つ', () => {
+    const state = submitState({ target: 20 });
+    expect(previewCandidates(state, 'shift')).toEqual([19, 20, 21]);
+  });
+
+  it('強奪(±2)は target を中心に 5 つ', () => {
+    const state = submitState({ target: 20 });
+    expect(previewCandidates(state, 'greed')).toEqual([18, 19, 20, 21, 22]);
+  });
+
+  it('予知(range 0)は target のみ', () => {
+    const state = submitState({ target: 20 });
+    expect(previewCandidates(state, 'vision')).toEqual([20]);
+  });
+
+  it('境界(target=1/40)で数字プール外をクランプする', () => {
+    expect(previewCandidates(submitState({ target: 1 }), 'greed')).toEqual([
+      1, 2, 3,
+    ]);
+    expect(previewCandidates(submitState({ target: 40 }), 'greed')).toEqual([
+      38, 39, 40,
+    ]);
   });
 });
