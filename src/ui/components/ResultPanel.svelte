@@ -90,7 +90,9 @@
     <button type="button" class="newgame" onclick={onnewgame}>
       もう一度
     </button>
-    <button type="button" class="title" onclick={ontitle}> タイトルへ </button>
+    <button type="button" class="gotitle" onclick={ontitle}>
+      タイトルへ
+    </button>
   </div>
 </div>
 
@@ -168,7 +170,7 @@
   .newgame {
     background: seagreen;
   }
-  .title {
+  .gotitle {
     background: color-mix(in srgb, currentColor 55%, transparent);
   }
 </style>

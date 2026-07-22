@@ -21,11 +21,14 @@ core にルール判断を持ち込まない原則は不変(Game/App は reduce 
 
 ### 2. `App.svelte` — 画面状態
 - `let screen = $state<'title' | 'playing'>('title')`。起動時は 'title'。
-- `let canContinue = $derived(screen === 'title' ? game.hasSave() : false)`(screen 変化で再評価)。
+- `let canContinue = $state(game.hasSave())`。`game.hasSave()` は localStorage 直読みで
+  runes の依存追跡外なので `$derived` にはできない。タイトルに入る/戻る(`goTitle`)と
+  `resume()` 失敗直後に明示的に再評価する。
 - タイトル画面(`screen === 'title'`):
   - ゲームタイトル + 簡単な説明
   - 「はじめる」ボタン → `game.newGame(); screen = 'playing'`
-  - `canContinue` のとき「つづきから」ボタン → `game.resume(); screen = 'playing'`
+  - `canContinue` のとき「つづきから」ボタン → `if (game.resume()) screen = 'playing'`
+    (復元失敗時は title に留まり `canContinue = game.hasSave()` で再評価。安全側の実装)
 - 対戦画面(`screen === 'playing'`): 既存のマークアップをそのまま `{:else}` 側へ。
 - ResultPanel に「タイトルへ」を追加:
   - `ontitle: () => void` prop を追加し、App では `screen = 'title'` にする。

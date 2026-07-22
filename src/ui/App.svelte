@@ -21,9 +21,10 @@
   // 画面状態。起動時はタイトル(docs/functional-design.md「画面遷移」: [*] --> Title)。
   let screen = $state<'title' | 'playing'>('title');
 
-  // タイトルで「つづきから」を出す条件。screen が変わるたび再評価する
-  // (対戦中はセーブが書かれ続けるが、タイトルに居る間は変化しない)。
-  let canContinue = $derived(screen === 'title' ? game.hasSave() : false);
+  // タイトルで「つづきから」を出す条件。game.hasSave() は localStorage を直読みで
+  // runes の依存追跡外なので $derived にはできない。タイトルに入る/戻るタイミングと
+  // resume() 失敗直後に明示的に再評価する。
+  let canContinue = $state(game.hasSave());
 
   // 提出中に選択したスキルの候補プレビュー(自盤面ハイライト用)。
   let previewSkill = $state<SkillId | null>(null);
@@ -38,10 +39,15 @@
     screen = 'playing';
   }
 
-  /** つづきから: 進行中セーブを復元して対戦画面へ。復元できなければタイトルに留まる。 */
+  /** つづきから: 進行中セーブを復元して対戦画面へ。復元できなければタイトルに留まり条件を更新。 */
   function continueFromTitle(): void {
     resultView = 'result';
-    if (game.resume()) screen = 'playing';
+    if (game.resume()) {
+      screen = 'playing';
+    } else {
+      // 復元不能でセーブが破棄された場合、ボタンを消すため再評価する。
+      canContinue = game.hasSave();
+    }
   }
 
   /** もう一度: 決着画面から新しいゲームを開始する(対戦画面のまま)。 */
@@ -50,9 +56,10 @@
     game.newGame();
   }
 
-  /** タイトルへ: 決着画面からタイトルに戻る。 */
+  /** タイトルへ: 決着画面からタイトルに戻る(決着で save は破棄済みなので条件を再評価)。 */
   function goTitle(): void {
     resultView = 'result';
+    canContinue = game.hasSave();
     screen = 'title';
   }
 
