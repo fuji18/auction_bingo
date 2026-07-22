@@ -144,7 +144,9 @@ src/ui/
 │   ├── TokenMark.svelte
 │   └── ResultPanel.svelte
 └── replay/
-    └── ReplayView.svelte
+    ├── ReplayView.svelte
+    ├── replay.ts          # events 列をターン単位へ整形する純粋関数 + 表示ラベル
+    └── replay.test.ts
 ```
 
 **命名規則**:
