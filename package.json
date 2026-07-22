@@ -28,7 +28,7 @@
     "svelte",
     "typescript"
   ],
-  "license": "MIT",
+  "license": "UNLICENSED",
   "devDependencies": {
     "@eslint/js": "^10.0.0",
     "@secretlint/secretlint-rule-preset-recommend": "^13.0.2",

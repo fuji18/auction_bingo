@@ -103,8 +103,8 @@
 
 ## ディレクトリ構造(要点)
 
-- `docs/ideas/`: 下書き・アイデア(自由形式。`/setup-project` が自動で読み込む)。プロジェクト開始の起点は `initial-requirements.md`
-- `docs/template-dev/`: テンプレート自体の開発記録と記入例(`*.example.md` 含め読み込み対象外。プロダクト開発開始後は削除可)
+- `docs/ideas/`: ゲームデザインの設計判断と経緯(`initial-requirements.md` Ver 3.3・`memo.txt`)。履歴として残す
+- `docs/playbook/`: スポーク公開の構成ルール(`spoke-development-standards.md`)
 - `docs/`: 正式版の永続ドキュメント6つ(PRD / 機能設計 / 技術仕様 / リポジトリ構造 / 開発ガイドライン / 用語集)。基本設計を記述し頻繁には更新しない「北極星」
 - 実装チケット: GitHub Issues で管理(`/setup-tickets` が発行。リポジトリ内にチケットファイルは置かない)
 - `.steering/`: 作業単位の計画とタスクリスト。作業ごとに新規作成し、**履歴としてコミットして保持する**
@@ -118,20 +118,12 @@
 - **PR 時(最終ゲート、自動は 1 回だけ)**: GitHub Actions は **main 向け PR のオープン時と ready_for_review 時のみ**走る。develop 等の統合ブランチ向け PR では走らない(意図的なコスト削減。feature コードの主レビューは実装中の code-reviewer が担う)。push ごとの再レビューも走らない。再レビューが必要なときは PR 上で `@claude` にメンションする
 - **Agent Teams 並行レビュー / `/code-review ultra`**: **200 行以上 かつ 重要変更(認証・決済・データ移行・アーキテクチャ変更)** のときのみ提案する。通常の大きめ差分には使わない
 
-## 開発プロセス
-
-### 初回セットアップ
-
-詳細な手順書は `README.md` を参照。
-
-1. このテンプレートを使用(devcontainerで開く)
-2. アイデアを `docs/ideas/initial-requirements.md` に書く
-3. `/kickoff` を実行(スタック整合 → /setup-project → /setup-tickets → /harness-setup → README書き換えまで一気通貫)
-   - ハブ&スポーク構成の場合は `/setup-spoke-standards` も実行する
-4. `/next-ticket` でチケットを消化(または `/add-feature [機能]`)
-
-### 日常的な使い方
+## 開発プロセス(日常的な使い方)
 
 基本は普通に会話で依頼する(ドキュメント編集・調査・相談など)。定型フローのみスラッシュコマンドを使う(各コマンドの説明はコマンド一覧に注入済み。早見表は `README.md` の「コマンド早見表」を参照)。
+
+- 実装は `/next-ticket`(GitHub Issues のチケットを依存・フェーズ順に選定)から着手する
+- チケット外の新機能は `/add-feature [機能]`
+- 完了報告の前に `/check` を通す
 
 **ポイント**: スペック駆動開発の詳細を意識する必要はありません。Claude Codeが適切なスキルを判断してロードします。
