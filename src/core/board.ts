@@ -107,3 +107,30 @@ export function markCount(board: Board): number {
     0
   );
 }
+
+/**
+ * 各セルが「リーチライン(4マーク)」「完成ライン(5マーク)」に属するかを
+ * board と同形の boolean グリッド([col][row])で返す(表示ハイライト用)。
+ *
+ * リーチ/完成の判定はルール(completedLines / reachCount)由来のため core が所有する。
+ * UI 側で LINE_INDICES を再走査するとライン定義が二重定義になるため、ここに集約する。
+ * 1 セルが複数ラインに属し得るため、いずれかで該当すれば true。
+ */
+export function lineHighlights(board: Board): {
+  reach: boolean[][];
+  complete: boolean[][];
+} {
+  const reach = board.map((col) => col.map(() => false));
+  const complete = board.map((col) => col.map(() => false));
+
+  for (const line of LINE_INDICES) {
+    const marked = line.filter(([c, r]) => board[c][r].marked).length;
+    if (marked === 5) {
+      for (const [c, r] of line) complete[c][r] = true;
+    } else if (marked === 4) {
+      for (const [c, r] of line) reach[c][r] = true;
+    }
+  }
+
+  return { reach, complete };
+}

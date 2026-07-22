@@ -100,6 +100,14 @@ export default tseslint.config(
     },
   },
   {
+    // ui/ は core/ と agents/ にのみ依存してよい。sim/ への依存は禁止する
+    // (docs/architecture.md「依存規則の機械的な強制」/ repository-structure.md「src/ui/」)。
+    files: ['src/ui/**/*.ts', 'src/ui/**/*.svelte'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: ['**/sim/**'] }],
+    },
+  },
+  {
     ignores: [
       'node_modules/**',
       'dist/**',

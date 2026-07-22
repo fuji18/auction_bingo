@@ -7,6 +7,7 @@ import {
   completedLines,
   reachCount,
   markCount,
+  lineHighlights,
   LINE_INDICES,
 } from './board';
 
@@ -200,5 +201,39 @@ describe('markCount', () => {
     const [board] = createBoard(DEFAULT_CONFIG, seedState(3));
     // 生成直後は FREE の 1 マスだけがマーク済み
     expect(markCount(board)).toBe(1);
+  });
+});
+
+describe('lineHighlights', () => {
+  it('4マークの列はリーチセル、完成セルは無し', () => {
+    let board = blankBoard();
+    for (let r = 0; r < 4; r++)
+      board = markNumber(board, board[0][r].value as number);
+    const { reach, complete } = lineHighlights(board);
+    // 列0 の row0..3 はリーチ、row4 も同ラインなのでリーチ
+    for (let r = 0; r < 5; r++) expect(reach[0][r]).toBe(true);
+    expect(complete[0].every((v) => v === false)).toBe(true);
+    // 無関係な列はハイライトされない
+    expect(reach[4].every((v) => v === false)).toBe(true);
+  });
+
+  it('5マークの列は完成セル、リーチ扱いしない', () => {
+    let board = blankBoard();
+    for (let r = 0; r < 5; r++)
+      board = markNumber(board, board[0][r].value as number);
+    const { reach, complete } = lineHighlights(board);
+    for (let r = 0; r < 5; r++) {
+      expect(complete[0][r]).toBe(true);
+      expect(reach[0][r]).toBe(false);
+    }
+  });
+
+  it('3マーク以下はリーチも完成もしない', () => {
+    let board = blankBoard();
+    for (let r = 0; r < 3; r++)
+      board = markNumber(board, board[0][r].value as number);
+    const { reach, complete } = lineHighlights(board);
+    expect(reach.every((col) => col.every((v) => !v))).toBe(true);
+    expect(complete.every((col) => col.every((v) => !v))).toBe(true);
   });
 });
