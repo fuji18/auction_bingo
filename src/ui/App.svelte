@@ -12,12 +12,22 @@
   import ResolveLog from './components/ResolveLog.svelte';
   import TellBadge from './components/TellBadge.svelte';
   import TokenMark from './components/TokenMark.svelte';
+  import ResultPanel from './components/ResultPanel.svelte';
+  import ReplayView from './replay/ReplayView.svelte';
 
   const HUMAN: PlayerId = 'p0';
   const game = new Game();
 
   // 提出中に選択したスキルの候補プレビュー(自盤面ハイライト用)。
   let previewSkill = $state<SkillId | null>(null);
+
+  // 決着後の表示切替(決着画面 ⇄ リプレイ)。
+  let resultView = $state<'result' | 'replay'>('result');
+
+  function startNewGame(): void {
+    resultView = 'result';
+    game.newGame();
+  }
 
   let pub = $derived(game.pub);
   let legal = $derived(game.myLegal);
@@ -118,31 +128,29 @@
         </div>
       </div>
     {:else if legal.phase === 'finished' && result}
-      <div class="finished">
-        <p class="prompt">
-          ゲーム終了 —
-          {#if result.winners.length === 1}
-            勝者: {pub.players.find((p) => p.id === result.winners[0])?.name}
-          {:else}
-            引き分け({result.winners
-              .map((w) => pub.players.find((p) => p.id === w)?.name)
-              .join('・')})
-          {/if}
-        </p>
-        <p class="note">決着画面とリプレイは次のチケット(#11)で追加します。</p>
-        <button type="button" class="newgame" onclick={() => game.newGame()}
-          >新しいゲーム</button
-        >
-      </div>
+      {#if resultView === 'replay'}
+        <ReplayView
+          log={game.state.log}
+          onback={() => (resultView = 'result')}
+        />
+      {:else}
+        <ResultPanel
+          {result}
+          onreplay={() => (resultView = 'replay')}
+          onnewgame={startNewGame}
+        />
+      {/if}
     {/if}
   </section>
 
-  <section class="logsec" aria-label="解決ログ">
-    <ResolveLog
-      events={game.recent}
-      names={{ p0: 'あなた', p1: 'レオ', p2: 'サラ' }}
-    />
-  </section>
+  {#if legal.phase !== 'finished'}
+    <section class="logsec" aria-label="解決ログ">
+      <ResolveLog
+        events={game.recent}
+        names={{ p0: 'あなた', p1: 'レオ', p2: 'サラ' }}
+      />
+    </section>
+  {/if}
 </main>
 
 <style>
@@ -241,19 +249,5 @@
     border-color: color-mix(in srgb, currentColor 40%, transparent);
     background: transparent;
     font-weight: 400;
-  }
-  .note {
-    margin: 0.3rem 0;
-    font-size: 0.78rem;
-    opacity: 0.7;
-  }
-  .newgame {
-    padding: 0.6rem 1rem;
-    border: none;
-    border-radius: 8px;
-    background: seagreen;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
   }
 </style>
