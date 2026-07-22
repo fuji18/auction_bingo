@@ -107,6 +107,15 @@ export function validateConfig(config: BalanceConfig): void {
     }
   }
 
+  // 盤面は size×size。各列は pickPerColumn 個のセルを供給する(中央は FREE に置換)ため、
+  // pickPerColumn は size と一致する必要がある。一致しないと board.ts のライン判定
+  // (SIZE 固定で board[c][r] を走査)が範囲外アクセス・誤判定を起こす。
+  if (board.pickPerColumn !== board.size) {
+    throw new Error(
+      `pickPerColumn ${board.pickPerColumn} は盤面サイズ ${board.size} と一致する必要があります`
+    );
+  }
+
   // 互いに素かつ隙間なく連続していることを確認する。
   const sorted = [...board.columns].sort((a, b) => a[0] - b[0]);
   for (let i = 1; i < sorted.length; i++) {
