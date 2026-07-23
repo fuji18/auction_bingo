@@ -18,15 +18,49 @@
   const HUMAN: PlayerId = 'p0';
   const game = new Game();
 
+  // 画面状態。起動時はタイトル(docs/functional-design.md「画面遷移」: [*] --> Title)。
+  let screen = $state<'title' | 'playing'>('title');
+
+  // タイトルで「つづきから」を出す条件。game.hasSave() は localStorage を直読みで
+  // runes の依存追跡外なので $derived にはできない。タイトルに入る/戻るタイミングと
+  // resume() 失敗直後に明示的に再評価する。
+  let canContinue = $state(game.hasSave());
+
   // 提出中に選択したスキルの候補プレビュー(自盤面ハイライト用)。
   let previewSkill = $state<SkillId | null>(null);
 
   // 決着後の表示切替(決着画面 ⇄ リプレイ)。
   let resultView = $state<'result' | 'replay'>('result');
 
+  /** はじめる: 新規ゲームを開始して対戦画面へ。 */
+  function startFromTitle(): void {
+    resultView = 'result';
+    game.newGame();
+    screen = 'playing';
+  }
+
+  /** つづきから: 進行中セーブを復元して対戦画面へ。復元できなければタイトルに留まり条件を更新。 */
+  function continueFromTitle(): void {
+    resultView = 'result';
+    if (game.resume()) {
+      screen = 'playing';
+    } else {
+      // 復元不能でセーブが破棄された場合、ボタンを消すため再評価する。
+      canContinue = game.hasSave();
+    }
+  }
+
+  /** もう一度: 決着画面から新しいゲームを開始する(対戦画面のまま)。 */
   function startNewGame(): void {
     resultView = 'result';
     game.newGame();
+  }
+
+  /** タイトルへ: 決着画面からタイトルに戻る(決着で save は破棄済みなので条件を再評価)。 */
+  function goTitle(): void {
+    resultView = 'result';
+    canContinue = game.hasSave();
+    screen = 'title';
   }
 
   let pub = $derived(game.pub);
@@ -54,122 +88,142 @@
 </script>
 
 <main>
-  <header class="topbar">
-    <span class="turn"
-      >ターン {game.state.turn} / {game.state.config.maxTurns}</span
-    >
-    <span class="coins">
-      🪙 {me?.coins ?? 0}
-      {#if me && me.reserved > 0}<span class="reserved"
-          >(予約 {me.reserved})</span
-        >{/if}
-    </span>
-  </header>
-
-  <details class="fairness">
-    <summary>このゲームの CPU について(フェアネス)</summary>
-    <ul>
-      <li>名前の下の傾向文は、各 CPU の意思決定のクセを説明したものです。</li>
-      <li>
-        提出前に出る 1 語のテル(例:「強気」「様子見」)は<strong
-          >確率的なヒント</strong
-        >で、確定情報ではありません。実際の入札とずれることがあります。
-      </li>
-      <li>
-        CPU は<strong
-          >非公開情報(他者の入札・山札・他者の予知結果)を参照しません</strong
-        >。自分に見える公開情報と自分の秘密情報だけで手を決めます。
-      </li>
-    </ul>
-  </details>
-
-  <section class="target" aria-label="今ターンのターゲット">
-    <span class="tlabel">ターゲット</span>
-    <span class="tval">{game.state.target}</span>
-    <span class="deck">山札 残り {pub.deckSize} 枚</span>
-  </section>
-
-  <section class="players">
-    {#each pub.players as p (p.id)}
-      <div class="player" class:me={p.id === HUMAN}>
-        <div class="pinfo">
-          <span class="pname">{p.name}</span>
-          <span class="pcoins">🪙{p.coins}</span>
-          {#if tokenHolder === p.id}<TokenMark />{/if}
-          {#if p.id !== HUMAN}<TellBadge text={game.tellOf(p.id)} />{/if}
-          {#if p.id !== HUMAN}
-            <span class="tendency">{game.tendencyOf(p.id)}</span>
-          {/if}
-        </div>
-        <BoardView
-          board={p.board}
-          compact={p.id !== HUMAN}
-          highlight={p.id === HUMAN ? myHighlight : []}
-          label={`${p.name} の盤面`}
-        />
+  {#if screen === 'title'}
+    <section class="title-screen" aria-label="タイトル">
+      <h1 class="game-title">オークション・ビンゴ</h1>
+      <p class="tagline">
+        数字を競り落として、いち早くビンゴを狙う読み合いゲーム。
+      </p>
+      <div class="title-actions">
+        <button type="button" class="start" onclick={startFromTitle}>
+          はじめる
+        </button>
+        {#if canContinue}
+          <button type="button" class="continue" onclick={continueFromTitle}>
+            つづきから
+          </button>
+        {/if}
       </div>
-    {/each}
-  </section>
-
-  <section class="action">
-    {#if legal.phase === 'submitting' && legal.options.length > 0}
-      {#key game.state.turn}
-        <SubmitPanel
-          options={legal.options}
-          coins={me?.coins ?? 0}
-          skills={game.state.config.skills}
-          onskillchange={(s) => (previewSkill = s)}
-          onsubmit={onSubmit}
-        />
-      {/key}
-    {:else if legal.phase === 'vision' && legal.peeked.length > 0}
-      <div class="vision">
-        <p class="prompt">予知: 山札の先頭に仕込む 1 枚を選ぶ</p>
-        <div class="choices">
-          {#each legal.peeked as n (n)}
-            <button type="button" onclick={() => game.selectVision(n)}
-              >{n}</button
-            >
-          {/each}
-        </div>
-      </div>
-    {:else if legal.phase === 'choosing' && legal.candidates.length > 0}
-      <div class="choose">
-        <p class="prompt">
-          落札! マークする数字を選ぶ(自盤面の候補を金枠で表示)
-        </p>
-        <div class="choices">
-          {#each legal.candidates as n (n)}
-            <button type="button" onclick={() => game.choose(n)}>{n}</button>
-          {/each}
-          <button type="button" class="pass" onclick={() => game.choose(null)}
-            >パス</button
-          >
-        </div>
-      </div>
-    {:else if legal.phase === 'finished' && result}
-      {#if resultView === 'replay'}
-        <ReplayView
-          log={game.state.log}
-          onback={() => (resultView = 'result')}
-        />
-      {:else}
-        <ResultPanel
-          {result}
-          onreplay={() => (resultView = 'replay')}
-          onnewgame={startNewGame}
-        />
-      {/if}
-    {/if}
-  </section>
-
-  {#if legal.phase !== 'finished'}
-    <section class="logsec" aria-label="解決ログ">
-      <ResolveLog
-        events={game.recent}
-        names={{ p0: 'あなた', p1: 'レオ', p2: 'サラ' }}
-      />
     </section>
+  {:else}
+    <header class="topbar">
+      <span class="turn"
+        >ターン {game.state.turn} / {game.state.config.maxTurns}</span
+      >
+      <span class="coins">
+        🪙 {me?.coins ?? 0}
+        {#if me && me.reserved > 0}<span class="reserved"
+            >(予約 {me.reserved})</span
+          >{/if}
+      </span>
+    </header>
+
+    <details class="fairness">
+      <summary>このゲームの CPU について(フェアネス)</summary>
+      <ul>
+        <li>名前の下の傾向文は、各 CPU の意思決定のクセを説明したものです。</li>
+        <li>
+          提出前に出る 1 語のテル(例:「強気」「様子見」)は<strong
+            >確率的なヒント</strong
+          >で、確定情報ではありません。実際の入札とずれることがあります。
+        </li>
+        <li>
+          CPU は<strong
+            >非公開情報(他者の入札・山札・他者の予知結果)を参照しません</strong
+          >。自分に見える公開情報と自分の秘密情報だけで手を決めます。
+        </li>
+      </ul>
+    </details>
+
+    <section class="target" aria-label="今ターンのターゲット">
+      <span class="tlabel">ターゲット</span>
+      <span class="tval">{game.state.target}</span>
+      <span class="deck">山札 残り {pub.deckSize} 枚</span>
+    </section>
+
+    <section class="players">
+      {#each pub.players as p (p.id)}
+        <div class="player" class:me={p.id === HUMAN}>
+          <div class="pinfo">
+            <span class="pname">{p.name}</span>
+            <span class="pcoins">🪙{p.coins}</span>
+            {#if tokenHolder === p.id}<TokenMark />{/if}
+            {#if p.id !== HUMAN}<TellBadge text={game.tellOf(p.id)} />{/if}
+            {#if p.id !== HUMAN}
+              <span class="tendency">{game.tendencyOf(p.id)}</span>
+            {/if}
+          </div>
+          <BoardView
+            board={p.board}
+            compact={p.id !== HUMAN}
+            highlight={p.id === HUMAN ? myHighlight : []}
+            label={`${p.name} の盤面`}
+          />
+        </div>
+      {/each}
+    </section>
+
+    <section class="action">
+      {#if legal.phase === 'submitting' && legal.options.length > 0}
+        {#key game.state.turn}
+          <SubmitPanel
+            options={legal.options}
+            coins={me?.coins ?? 0}
+            skills={game.state.config.skills}
+            onskillchange={(s) => (previewSkill = s)}
+            onsubmit={onSubmit}
+          />
+        {/key}
+      {:else if legal.phase === 'vision' && legal.peeked.length > 0}
+        <div class="vision">
+          <p class="prompt">予知: 山札の先頭に仕込む 1 枚を選ぶ</p>
+          <div class="choices">
+            {#each legal.peeked as n (n)}
+              <button type="button" onclick={() => game.selectVision(n)}
+                >{n}</button
+              >
+            {/each}
+          </div>
+        </div>
+      {:else if legal.phase === 'choosing' && legal.candidates.length > 0}
+        <div class="choose">
+          <p class="prompt">
+            落札! マークする数字を選ぶ(自盤面の候補を金枠で表示)
+          </p>
+          <div class="choices">
+            {#each legal.candidates as n (n)}
+              <button type="button" onclick={() => game.choose(n)}>{n}</button>
+            {/each}
+            <button type="button" class="pass" onclick={() => game.choose(null)}
+              >パス</button
+            >
+          </div>
+        </div>
+      {:else if legal.phase === 'finished' && result}
+        {#if resultView === 'replay'}
+          <ReplayView
+            log={game.state.log}
+            onback={() => (resultView = 'result')}
+          />
+        {:else}
+          <ResultPanel
+            {result}
+            onreplay={() => (resultView = 'replay')}
+            onnewgame={startNewGame}
+            ontitle={goTitle}
+          />
+        {/if}
+      {/if}
+    </section>
+
+    {#if legal.phase !== 'finished'}
+      <section class="logsec" aria-label="解決ログ">
+        <ResolveLog
+          events={game.recent}
+          names={{ p0: 'あなた', p1: 'レオ', p2: 'サラ' }}
+        />
+      </section>
+    {/if}
   {/if}
 </main>
 
@@ -180,6 +234,46 @@
     padding: 0.6rem;
     display: grid;
     gap: 0.7rem;
+  }
+  .title-screen {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+    text-align: center;
+    padding-block: clamp(2rem, 12vh, 5rem) 1rem;
+  }
+  .game-title {
+    margin: 0;
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .tagline {
+    margin: 0;
+    max-inline-size: 22rem;
+    opacity: 0.75;
+    line-height: 1.5;
+  }
+  .title-actions {
+    display: grid;
+    gap: 0.6rem;
+    inline-size: min(100%, 16rem);
+    margin-block-start: 0.5rem;
+  }
+  .title-actions button {
+    padding: 0.8rem 1rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+  }
+  .title-actions .start {
+    background: seagreen;
+  }
+  .title-actions .continue {
+    background: royalblue;
   }
   .topbar {
     display: flex;
