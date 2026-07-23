@@ -183,7 +183,9 @@ tests/
 ├── determinism.test.ts      # 同一 seed + actions から同一 state / events
 ├── coinConservation.test.ts # コイン保存則
 ├── saveRestore.test.ts      # seed + actions からの復元一致
-└── informationBarrier.test.ts # PublicView に秘匿情報が含まれないこと
+├── informationBarrier.test.ts # PublicView に秘匿情報が含まれないこと
+└── support/
+    └── driver.ts            # 統合テスト共通のゲーム進行ヘルパー
 ```
 
 **ユニットテストを同居させる理由**: `core/` は純粋関数の集合で、実装とテストが1対1に対応する。距離が近いほど更新漏れが起きにくい。一方で統合テストは複数モジュールにまたがり対応先が特定できないため、`tests/` に分ける。
