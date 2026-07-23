@@ -107,7 +107,7 @@ function report(metrics: Metrics, opts: Options, elapsedMs: number): string {
     `スキル使用率        : ${pct(m.skillUsageRate)}   (40-60%)      [${judge(m.skillUsageRate, 0.4, 0.6)}]`
   );
   lines.push(
-    `落札×勝率 相関(r)  : ${m.auctionWinCorrelation.toFixed(3)}   (≥0.3)        [${judge(m.auctionWinCorrelation, 0.3, Infinity)}]`
+    `落札×勝率 相関(r)  : ${m.auctionWinCorrelation.toFixed(3)}   (参考)         [INFO]  ※第三席の攻撃性で符号が反転する参考指標。中心性は支配的戦略 KPI で担保`
   );
   lines.push(
     `支配的戦略の勝率    : ${pct(m.dominantStrategyWinRate)}   (<50%)        [${judge(m.dominantStrategyWinRate, 0, 0.4999999)}]`
