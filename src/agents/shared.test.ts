@@ -27,7 +27,7 @@ describe('numberBoundsOf / skillRangeOf / skillCostOf / clampBid', () => {
     expect(skillRangeOf('greed')).toBe(2);
     expect(skillRangeOf('vision')).toBe(0);
     expect(skillRangeOf(null)).toBe(0);
-    expect(skillCostOf(DEFAULT_CONFIG, 'vision')).toBe(5);
+    expect(skillCostOf(DEFAULT_CONFIG, 'vision')).toBe(2);
     expect(skillCostOf(DEFAULT_CONFIG, null)).toBe(0);
   });
 

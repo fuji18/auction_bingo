@@ -67,9 +67,9 @@ export const DEFAULT_CONFIG: BalanceConfig = {
     distributionDivisor: 4,
   },
   skills: {
-    shift: { cost: 4, range: 1 },
-    vision: { cost: 5, peek: 3 },
-    greed: { cost: 6, range: 2 },
+    shift: { cost: 2, range: 1 },
+    vision: { cost: 2, peek: 3 },
+    greed: { cost: 3, range: 2 },
   },
 };
 

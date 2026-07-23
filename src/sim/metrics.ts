@@ -50,7 +50,7 @@ export interface Metrics {
   bingoRate: number;
   /** スキル使用率(0..1)。目標 0.40..0.60。 */
   skillUsageRate: number;
-  /** 落札回数と勝率のピアソン相関。目標 ≥ 0.3。 */
+  /** 落札回数と勝率のピアソン相関。参考指標(ゲート外・#29)。第三席の攻撃性で符号が反転する。 */
   auctionWinCorrelation: number;
   /** スロット別勝率。 */
   strategyWinRates: { playerId: PlayerId; agent: string; winRate: number }[];
