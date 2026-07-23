@@ -81,6 +81,14 @@
 
   let result = $derived(game.state.result);
 
+  // 表示名は PlayerState.name(core が唯一の情報源)から引く。UI 側で再定義しない。
+  let names = $derived(
+    Object.fromEntries(pub.players.map((p) => [p.id, p.name])) as Record<
+      PlayerId,
+      string
+    >
+  );
+
   function onSubmit(skill: SkillId | null, bid: number): void {
     previewSkill = null;
     game.submit(skill, bid);
@@ -218,10 +226,7 @@
 
     {#if legal.phase !== 'finished'}
       <section class="logsec" aria-label="解決ログ">
-        <ResolveLog
-          events={game.recent}
-          names={{ p0: 'あなた', p1: 'レオ', p2: 'サラ' }}
-        />
+        <ResolveLog events={game.recent} {names} />
       </section>
     {/if}
   {/if}
