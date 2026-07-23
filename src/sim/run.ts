@@ -1,7 +1,12 @@
 /**
  * 自動対戦シミュレーションの CLI エントリ。
  *
- *   npm run sim -- --games 10000 --seed 1 --agents leo,sara,hoarder
+ *   npm run sim -- --games 10000 --seed 1 --agents leo,sara,allIn
+ *
+ * プライマリー KPI の既定計測は「実際の対戦(レオ・サラ + 能動的な第三席)」を代表させる
+ * ため第三席に allIn(全力入札=攻めの人間像)を置く。貯め込み(hoarder)は「非入札戦略が
+ * 支配しないか」を見る支配的戦略クロスチェック用に別途回す(docs/product-requirements.md
+ * 「成功指標(KPI)」)。
  *
  * N 戦を回して KPI 7 項目を集計し、目標レンジと PASS/WARN 付きで出力する。
  * KPI が目標を割っても異常終了しない(バランス調整は継続作業のため。CI を赤にしない)。
@@ -29,7 +34,7 @@ function parseArgs(argv: string[]): Options {
   const opts: Options = {
     games: 10_000,
     seed: 1,
-    agents: ['leo', 'sara', 'hoarder'],
+    agents: ['leo', 'sara', 'allIn'],
   };
 
   for (let i = 0; i < argv.length; i++) {
