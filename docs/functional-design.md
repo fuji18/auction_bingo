@@ -221,6 +221,8 @@ interface SecretView {
 }
 
 interface Agent {
+  /** この CPU の意思決定の傾向を説明する一文(UI 表示用。意思決定には影響しない)。 */
+  tendency: string;
   submit(pub: PublicView, sec: SecretView): { skill: SkillId | null; bid: number };
   chooseNumber(pub: PublicView, sec: SecretView, candidates: number[]): number | null;
   selectVision(pub: PublicView, sec: SecretView, peeked: number[]): number;
@@ -264,6 +266,8 @@ export function markNumber(board: Board, value: number): Board;    // 非破壊
 export function completedLines(board: Board): number;
 export function reachCount(board: Board): number;                   // 4マークのライン本数
 export function markCount(board: Board): number;                    // FREE を含む
+export function lineHighlights(board: Board):                       // UI ハイライト用
+  { reach: boolean[][]; complete: boolean[][] };
 ```
 
 **ライン定義**: 縦5 + 横5 + 斜め2 = 12本。FREE セルは常にマーク済みとして数える。
@@ -281,6 +285,7 @@ type Action =
 export function createGame(config: BalanceConfig, seed: number): GameState;
 export function reduce(state: GameState, actions: Action[]): { state: GameState; events: GameEvent[] };
 export function legalActions(state: GameState, playerId: PlayerId): Action[] | ActionSpec;
+export function previewCandidates(state: GameState, skill: SkillId | null): number[];  // 購入前プレビュー用
 ```
 
 **依存関係**: `config` / `rng` / `board` のみ。UI・DOM・タイマー・I/O に依存しない。
@@ -321,14 +326,18 @@ npm run sim -- --games 10000 --seed 1 --agents leo,sara,hoarder
 ui/
 ├ App.svelte
 ├ game.svelte.ts        state を保持する runes ストア。reduce を呼ぶだけ
+├ storage.ts            localStorage への退避と復元
+├ global.css
 ├ components/
 │  ├ BoardView.svelte
 │  ├ SubmitPanel.svelte     スキル選択 + 入札スライダー
 │  ├ TellBadge.svelte
+│  ├ TokenMark.svelte       優先権トークンのアイコン
 │  ├ ResolveLog.svelte
 │  └ ResultPanel.svelte
 └ replay/
-   └ ReplayView.svelte      events 列を再生する
+   ├ ReplayView.svelte      events 列を再生する
+   └ replay.ts              events からリプレイ用のフレーム列を組み立てる
 ```
 
 ## ユースケース図
@@ -633,8 +642,17 @@ ratio < 0.15           → 「静観」
 | ターゲット | 今ターンの $T$ | 大きく中央に |
 | 盤面 | 5×5。マーク済み・FREE・リーチを区別 | 色と枠線 |
 | テル | CPU の状態を1語 | `「強気」` |
+| 傾向 | 各 CPU の意思決定のクセを説明する一文。常時表示 | プレイヤー名の下に小さく |
 | 優先権トークン | 保持者を示す | プレイヤー名の横にアイコン |
 | ログ | 直近の解決結果 | `レオが8枚で落札 → 26を選択(あなた・サラがマーク)` |
+
+### フェアネス注記
+
+盤面下に折りたたみ(`<details>`)でフェアネスの説明を常設する。PRD「5. CPU 対戦相手」の受け入れ条件「CPU が有利になっていないことを player が確認できる」を満たすため、以下を明言する。
+
+- 名前の下の傾向文は各 CPU の意思決定のクセを説明したものである。
+- テルは確率的なヒントであり、**15% のノイズを含む**(必ずしも真実ではない)。
+- CPU は**非公開情報(他者の入札・山札・他者の予知結果)を参照しない**。
 
 ### カラーコーディング
 
