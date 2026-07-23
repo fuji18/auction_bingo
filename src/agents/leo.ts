@@ -16,6 +16,7 @@ import {
   coinsOf,
   desire,
   makeTell,
+  reachCount,
   selectVision,
   skillCostOf,
   skillRangeOf,
@@ -33,12 +34,19 @@ function chooseSkill(pub: PublicView, sec: SecretView): SkillId | null {
   const budget = coinsOf(pub, sec.playerId);
   const d0 = desire(board, pub.target, 0);
   const d1 = desire(board, pub.target, 1);
-  if (
-    d0 === 0 &&
-    budget >= pub.config.skills.greed.cost + LEO.greedBudgetMargin
-  )
+  const d2 = desire(board, pub.target, 2);
+  // 猪突型は範囲拡張スキル(強奪 > 偏向)を好む。候補が最も増える方を積極的に買う。
+  // ±2 まで広げて候補が増えるなら強奪。
+  if (d2 > d1 && budget >= pub.config.skills.greed.cost + LEO.greedBudgetMargin)
     return 'greed';
-  if (d1 > d0) return 'shift';
+  // ±1 で候補が増えるなら偏向。
+  if (d1 > d0 && budget >= pub.config.skills.shift.cost) return 'shift';
+  // 範囲拡張の余地が無いターンも、リーチが立っていれば予知で仕留めにいく。
+  if (
+    reachCount(board) > 0 &&
+    budget >= pub.config.skills.vision.cost + LEO.visionBudgetMargin
+  )
+    return 'vision';
   return null;
 }
 

@@ -40,12 +40,13 @@ describe('sara.submit スキル選択', () => {
 });
 
 describe('sara.submit 追随入札', () => {
-  it('直前落札額 + 1 を基準に、desire>0 なら min(base, budget)', () => {
+  it('直前落札額 + 1 を基準に、desire>0 なら min(base, budget-cost)', () => {
+    // target=3・リーチ無し → desire(1)>desire(0) なので偏向を買う(cost 2)。
     const pub = pubWith(boards(), { target: 3, history: historyWithBid(6) });
-    pub.players[0].coins = 10; // greed 閾値(12)未満 → skill null
+    pub.players[0].coins = 10;
     const { skill, bid } = sara.submit(pub, secOf('p0'));
-    expect(skill).toBeNull();
-    expect(bid).toBe(7); // min(6+1, 10)
+    expect(skill).toBe('shift');
+    expect(bid).toBe(7); // min(6+1, 10-2)
   });
 
   it('履歴が無い初ターンは initialCoins × 0.2 を基準にする', () => {

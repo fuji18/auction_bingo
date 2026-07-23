@@ -177,19 +177,19 @@ describe('精算(ステップ6)', () => {
       players: base.players.map((p) => ({ ...p, board: plainBoard() })),
     });
     const { state: next, events } = reduce(state, [
-      { type: 'SUBMIT', playerId: 'p0', skill: 'shift', bid: 9 }, // 落札(cost4 徴収)
-      { type: 'SUBMIT', playerId: 'p1', skill: 'shift', bid: 3 }, // 落札失敗(cost4 返金)
+      { type: 'SUBMIT', playerId: 'p0', skill: 'shift', bid: 9 }, // 落札(cost2 徴収)
+      { type: 'SUBMIT', playerId: 'p1', skill: 'shift', bid: 3 }, // 落札失敗(cost2 返金)
       { type: 'SUBMIT', playerId: 'p2', skill: null, bid: 0 },
       { type: 'CHOOSE', playerId: 'p0', value: 10 },
     ]);
     expect(events).toContainEqual({
       type: 'SkillRefunded',
       playerId: 'p1',
-      amount: 4,
+      amount: 2,
       reason: 'lost-auction',
     });
-    // p0: 15 - 9(bid) - 4(shift) = 2。
-    expect(next.players.find((p) => p.id === 'p0')!.coins).toBe(2);
+    // p0: 15 - 9(bid) - 2(shift) = 4。
+    expect(next.players.find((p) => p.id === 'p0')!.coins).toBe(4);
     // p1: 落札失敗、コスト返金 → 15 + floor(9/4)=2 = 17。
     expect(next.players.find((p) => p.id === 'p1')!.coins).toBe(17);
     // reserved は全クリア。
@@ -263,11 +263,11 @@ describe('予知の競合(ステップ2)', () => {
     expect(events).toContainEqual({
       type: 'SkillRefunded',
       playerId: 'p1',
-      amount: 5,
+      amount: 2,
       reason: 'vision-conflict',
     });
     expect(next.reserved.p1).toBe(0);
-    expect(next.reserved.p2).toBe(5); // 成功者は選択時に徴収されるまで予約が残る
+    expect(next.reserved.p2).toBe(2); // 成功者は選択時に徴収されるまで予約が残る
     expect(next.visionPeek.p2.length).toBe(3);
   });
 
@@ -305,9 +305,9 @@ describe('予知の競合(ステップ2)', () => {
       kept: peeked[0],
     });
     expect(afterVision.state.phase).toBe('choosing');
-    // 予知コスト5を即時徴収 → 15 - 5 = 10。
+    // 予知コスト2を即時徴収 → 15 - 2 = 13。
     expect(afterVision.state.players.find((p) => p.id === 'p0')!.coins).toBe(
-      10
+      13
     );
     // 選んだ数字が山札の先頭に来る。
     expect(afterVision.state.deck[0]).toBe(peeked[0]);
@@ -439,9 +439,9 @@ describe('タイブレーク(ステップ7・maxTurns)', () => {
 describe('不正・フェーズ不一致アクション', () => {
   it('コイン超過・負入札・予約超過は state を変えず events も残さない', () => {
     const state = submitState({ target: 10 });
-    // p0: 予約超過(shift cost4 + bid12 > coins15)。
+    // p0: 予約超過(shift cost2 + bid14 > coins15)。
     const r1 = reduce(state, [
-      { type: 'SUBMIT', playerId: 'p0', skill: 'shift', bid: 12 },
+      { type: 'SUBMIT', playerId: 'p0', skill: 'shift', bid: 14 },
     ]);
     expect(r1.events).toEqual([]);
     expect(r1.state).toBe(state);
@@ -450,11 +450,11 @@ describe('不正・フェーズ不一致アクション', () => {
       { type: 'SUBMIT', playerId: 'p0', skill: null, bid: -1 },
     ]);
     expect(r2.events).toEqual([]);
-    // コスト超過(手持ち15で買えないスキルは無いが、コインを下げて確認)。
+    // コスト超過(手持ち2 で greed(cost3)は買えない)。
     const poor = submitState({
       target: 10,
       players: createGame(DEFAULT_CONFIG, 1).players.map((p) =>
-        p.id === 'p0' ? { ...p, coins: 3 } : p
+        p.id === 'p0' ? { ...p, coins: 2 } : p
       ),
     });
     const r3 = reduce(poor, [
@@ -490,12 +490,12 @@ describe('legalActions', () => {
     const spec = legalActions(state, 'p0');
     expect(spec.phase).toBe('submitting');
     if (spec.phase !== 'submitting') return;
-    // 手持ち15なら null(15)/shift(11)/vision(10)/greed(9) すべて可能。
+    // 手持ち15なら null(15)/shift(13)/vision(13)/greed(12) すべて可能。
     expect(spec.options).toEqual([
       { skill: null, maxBid: 15 },
-      { skill: 'shift', maxBid: 11 },
-      { skill: 'vision', maxBid: 10 },
-      { skill: 'greed', maxBid: 9 },
+      { skill: 'shift', maxBid: 13 },
+      { skill: 'vision', maxBid: 13 },
+      { skill: 'greed', maxBid: 12 },
     ]);
   });
 

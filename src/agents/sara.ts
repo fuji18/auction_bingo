@@ -34,14 +34,20 @@ function lastWinningBid(pub: PublicView): number | null {
 function chooseSkill(pub: PublicView, sec: SecretView): SkillId | null {
   const board = boardOf(pub, sec.playerId);
   const budget = coinsOf(pub, sec.playerId);
+  // 追随型は予知を好む(山札を仕込んで差し込む決め手)が、範囲拡張も使う。
+  // リーチが立ったら予知で仕留めにいく。
   if (
     reachCount(board) > 0 &&
     budget >= pub.config.skills.vision.cost + SARA.visionBudgetMargin
   )
     return 'vision';
   const d0 = desire(board, pub.target, 0);
-  const d2 = desire(board, pub.target, 2);
-  if (d2 > d0 && budget >= SARA.greedMinBudget) return 'greed';
+  const d1 = desire(board, pub.target, 1);
+  // ±1 で候補が増えるなら偏向で差し込み先を作る。
+  if (d1 > d0 && budget >= pub.config.skills.shift.cost) return 'shift';
+  // 差し込み先が無いターンも、予算に余裕があれば予知で山札を仕込む(予知に寄せる)。
+  if (budget >= pub.config.skills.vision.cost + SARA.visionBudgetMargin)
+    return 'vision';
   return null;
 }
 

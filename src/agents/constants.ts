@@ -14,7 +14,9 @@ export const LEO = {
   /** aggression の終盤値(turn=maxTurns)。 */
   aggressionEnd: 0.2,
   /** greed を選ぶ最低予算の上乗せ(budget >= greed.cost + この値)。 */
-  greedBudgetMargin: 4,
+  greedBudgetMargin: 1,
+  /** vision(フォールバック)を選ぶ最低予算の上乗せ(budget >= vision.cost + この値)。 */
+  visionBudgetMargin: 0,
 } as const;
 
 /** サラ「追随して差し込む型」。 */
@@ -24,9 +26,7 @@ export const SARA = {
   /** desire が 0 のときの控えめ入札 = base × この比率。 */
   passBidRatio: 0.3,
   /** vision を選ぶ最低予算の上乗せ(budget >= vision.cost + この値)。 */
-  visionBudgetMargin: 2,
-  /** greed を選ぶ最低予算。 */
-  greedMinBudget: 12,
+  visionBudgetMargin: 0,
 } as const;
 
 /** テル生成の ratio 閾値(予定入札額 / budget)。 */
