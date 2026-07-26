@@ -221,6 +221,8 @@ interface SecretView {
 }
 
 interface Agent {
+  /** この CPU の意思決定の傾向を説明する一文(UI 表示用。意思決定には影響しない)。 */
+  tendency: string;
   submit(pub: PublicView, sec: SecretView): { skill: SkillId | null; bid: number };
   chooseNumber(pub: PublicView, sec: SecretView, candidates: number[]): number | null;
   selectVision(pub: PublicView, sec: SecretView, peeked: number[]): number;
@@ -264,6 +266,8 @@ export function markNumber(board: Board, value: number): Board;    // 非破壊
 export function completedLines(board: Board): number;
 export function reachCount(board: Board): number;                   // 4マークのライン本数
 export function markCount(board: Board): number;                    // FREE を含む
+export function lineHighlights(board: Board):                       // UI ハイライト用
+  { reach: boolean[][]; complete: boolean[][] };
 ```
 
 **ライン定義**: 縦5 + 横5 + 斜め2 = 12本。FREE セルは常にマーク済みとして数える。
@@ -281,6 +285,7 @@ type Action =
 export function createGame(config: BalanceConfig, seed: number): GameState;
 export function reduce(state: GameState, actions: Action[]): { state: GameState; events: GameEvent[] };
 export function legalActions(state: GameState, playerId: PlayerId): Action[] | ActionSpec;
+export function previewCandidates(state: GameState, skill: SkillId | null): number[];  // 購入前プレビュー用
 ```
 
 **依存関係**: `config` / `rng` / `board` のみ。UI・DOM・タイマー・I/O に依存しない。
@@ -298,8 +303,10 @@ export function legalActions(state: GameState, playerId: PlayerId): Action[] | A
 
 ```
 agents/
+├ registry.ts  名前 → Agent の生成(createAgent)
 ├ leo.ts       猪突型
 ├ sara.ts      追随型
+├ shared.ts    CPU 共通の意思決定ロジック
 └ baseline/    シミュレーション専用の戦略(貯め込み / 全力入札 / スキル不買 / ランダム)
 ```
 
@@ -319,14 +326,18 @@ npm run sim -- --games 10000 --seed 1 --agents leo,sara,hoarder
 ui/
 ├ App.svelte
 ├ game.svelte.ts        state を保持する runes ストア。reduce を呼ぶだけ
+├ storage.ts            localStorage への退避と復元
+├ global.css
 ├ components/
 │  ├ BoardView.svelte
 │  ├ SubmitPanel.svelte     スキル選択 + 入札スライダー
 │  ├ TellBadge.svelte
+│  ├ TokenMark.svelte       優先権トークンのアイコン
 │  ├ ResolveLog.svelte
 │  └ ResultPanel.svelte
 └ replay/
-   └ ReplayView.svelte      events 列を再生する
+   ├ ReplayView.svelte      events 列を再生する
+   └ replay.ts              events からリプレイ用のフレーム列を組み立てる
 ```
 
 ## ユースケース図
@@ -495,14 +506,16 @@ paid ← winner.bid
 winner.coins -= paid
 winner.coins -= (winner のスキルが shift または greed なら そのコスト)   // ★落札時のみ徴収
 each loser:
-    received ← floor(paid / distributionDivisor)
-    loser.coins ← min(loser.coins + received, coinCap)
+    received ← min(loser.coins + floor(paid / distributionDivisor), coinCap) - loser.coins  // 実受取(coinCap クランプ後)
+    loser.coins += received
 toBank ← paid - (received の総和)
 落札できなかった者の shift / greed の予約を解除して返金する   → SkillRefunded
 全員の reserved をクリアする
 ```
 
-**分配の例**: `paid = 10`, `divisor = 4` → 各敗者 `floor(10/4) = 2` 枚、2人で 4 枚、銀行が 6 枚回収。**入札額の 6 割が経済から消える**ため、コインが際限なく循環せず実効的なシンクとして働く。
+`received` は **coinCap でクランプした後の実受取額**とし、`Settled` イベントにもこの実受取額を載せる。これにより `paid == Σreceived + toBank` が常に厳密に成立する(クランプで受け取れなかった差分は銀行回収 `toBank` に合算されて経済から消える)。
+
+**分配の例**: `paid = 10`, `divisor = 4`(クランプ無し)→ 各敗者 `floor(10/4) = 2` 枚、2人で 4 枚、銀行が 6 枚回収。**入札額の 6 割が経済から消える**ため、コインが際限なく循環せず実効的なシンクとして働く。
 
 #### ステップ7: ビンゴ判定
 
@@ -596,6 +609,8 @@ ratio < 0.15           → 「静観」
 
 **ノイズを入れるのは、テルを確定情報にしないため。** PRD の「確率的なヒントであり確定情報ではない」を実装で保証する。UI 上にもその旨を明記する。
 
+**このノイズ判定に使う乱数は `state.rng` を消費しない。** `Agent.tell` は rng 引数を持たず、一方で `Math.random()` は禁止・かつリプレイ再現のため決定性が必須である。そこで `src/agents/shared.ts` の `deriveRng(pub, playerId, salt)` が、公開情報(`turn` / `target` / `tokenIndex` / 自コイン)と用途別 `salt` から seed を組み、`core/rng` の関数で消費する。ゲーム本体の状態遷移で使う `state.rng` には一切触れないため、**乱数消費順序に影響を与えずに**エージェント側で決定的な擬似乱数を得られる。`salt`(`tell`/`skill`/`bid`/`choose`/`vision`)は同一ターン内で用途ごとに独立した乱数列を得るための区別子。
+
 ## UI設計
 
 ### 画面レイアウト(縦画面・幅375px を基準に設計する)
@@ -629,8 +644,17 @@ ratio < 0.15           → 「静観」
 | ターゲット | 今ターンの $T$ | 大きく中央に |
 | 盤面 | 5×5。マーク済み・FREE・リーチを区別 | 色と枠線 |
 | テル | CPU の状態を1語 | `「強気」` |
+| 傾向 | 各 CPU の意思決定のクセを説明する一文。常時表示 | プレイヤー名の下に小さく |
 | 優先権トークン | 保持者を示す | プレイヤー名の横にアイコン |
 | ログ | 直近の解決結果 | `レオが8枚で落札 → 26を選択(あなた・サラがマーク)` |
+
+### フェアネス注記
+
+盤面下に折りたたみ(`<details>`)でフェアネスの説明を常設する。PRD「5. CPU 対戦相手」の受け入れ条件「CPU が有利になっていないことを player が確認できる」を満たすため、以下を明言する。
+
+- 名前の下の傾向文は各 CPU の意思決定のクセを説明したものである。
+- テルは確率的なヒントであり、**15% のノイズを含む**(必ずしも真実ではない)。
+- CPU は**非公開情報(他者の入札・山札・他者の予知結果)を参照しない**。
 
 ### カラーコーディング
 
@@ -724,12 +748,12 @@ localStorage:
 PRD のプライマリー KPI をそのまま自動テスト化する。**閾値を割ったら CI ではなく開発者への警告として扱う**(バランス調整は継続的な作業のため、CI を赤にしない)。
 
 - ビンゴ発生率 95% 以上
-- スキル使用率 40〜60%
-- 落札回数と勝率の相関 r ≥ 0.3
-- 単一戦略(貯め込み / 全力入札 / スキル不買)の勝率が 50% 未満
+- スキル使用率 40〜60%(既定計測 `leo,sara,allIn`)
+- 単一戦略(貯め込み / 全力入札 / スキル不買)の勝率が 50% 未満、かつ非入札(貯め込み)が均等分 33% を明確に下回る(= オークションの中心性)
 - 平均決着ターン 16〜20
 - 終盤(残り5ターン)の単一スキル選択比率が 70% 以下
 - パス率 1〜15%
+- (参考・ゲート外)落札回数と勝率の相関 r … 第三席の攻撃性で符号が反転する脆い指標のため #29 で参考値に再定義(詳細は PRD「成功指標」)
 
 ### E2Eテスト
 
@@ -742,6 +766,6 @@ P0 のスコープでは導入しない(Playwright は UI 実装フェーズで�
 | 項目 | 現在の仮決め | 判断材料 |
 |---|---|---|
 | 予知の価格 | 5 | オークションを迂回できる強さに見合うか。スキル使用率の内訳で判断 |
-| 落札の価値 | 追加ボーナスなし | 「落札回数と勝率の相関」が弱い場合、**落札者ボーナス**(選んだ数字を盤面に無くてもフリーマーク)を追加する |
+| 落札の価値 | 追加ボーナスなし | 非入札(貯め込み)戦略の勝率が均等分 33% に近づく場合、**落札者ボーナス**(選んだ数字を盤面に無くてもフリーマーク)を追加する。※#29 で「落札回数と勝率の相関」はゲートから外し参考指標化した |
 | 予知の競合時の返金 | 全額返金 | ノーリスクのため終盤に全員が買う可能性がある。半額返金への変更を検討 |
 | 選ばれた数字の山札からの除去 | **除去しない**(`target` のみ除去) | 既マークの数字が再び `target` になる頻度を計測する。頻発するなら除去を検討するが、除去すると山札が25ターンより早く尽きる可能性がある |

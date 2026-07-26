@@ -83,9 +83,19 @@
 
 #### チケット運用(GitHub Issues)
 
-チケットは GitHub Issues(`ticket` + 優先度ラベル)で管理する(`/setup-tickets` が発行)。着手時に `in-progress` ラベルを付け、PR ボディの `Closes #N` でマージ時に自動クローズさせる。PR 作成後は Issue にコメントで `.steering/` ディレクトリ名とPR URLを記録する(`/next-ticket` が担当)。チケットファイルのステータス編集・コミットは行わない。
+チケットは GitHub Issues(`ticket` + 優先度ラベル)で管理する(`/setup-tickets` が発行)。着手時に `in-progress` ラベルを付ける。PR 作成後は Issue にコメントで `.steering/` ディレクトリ名とPR URLを記録する(`/next-ticket` が担当)。チケットファイルのステータス編集・コミットは行わない。
+
+**クローズは `develop` マージ時に手動で行う**(`gh issue close #N`、コメントに PR 番号を添える)。feature PR は `develop` 宛てで `Closes #N` は自動発火しない(発火はデフォルトブランチ = `main` へのマージ時のみ)ため、develop マージ後は手動クローズで統一する。これにより依存チェック(`depends: #N` の参照先が closed か)が正しく解決される。PR ボディには引き続き `Closes #N` を書いてよい(将来 main へ直接入った場合の保険)。
 
 **`gh` CLI が使えない環境(Claude Code on the web のリモート実行等)では、コマンド・スキル内の `gh` 操作を同等の GitHub MCP ツール(`mcp__github__*`)で代替する。**
+
+#### ブランチ運用(feature → develop → main)
+
+**このリポジトリは統合ブランチ `develop` を持つ。feature ブランチは `develop` から切り、PR も `develop` 宛てに作る。`main` 宛てに feature PR を作らない。** `main` はリリース済み安定版で、`develop` からのリリース PR でのみ更新する。ハーネスが提示する「Main branch: main」は既定値であり、本リポジトリの feature PR ベースは `develop`。
+
+- **着手前に必ず確認**: `git log --oneline origin/develop..HEAD` が空、または `gh pr list --state all --head <branch>` に該当 PR がある場合、その作業は**既にマージ済み**。重複 PR を作らない
+- **develop マージ時に Issue を手動クローズする**(`gh issue close`)。develop へのマージでは `Closes #N` が自動発火しないため。詳細は上の「チケット運用」節
+- `develop` 宛て PR では CI の自動 Claude レビューは走らない(`main` 宛て PR のオープン/ready 時のみ。コスト削減の設計)
 
 #### コンテキスト管理(チケット区切りで /clear)
 

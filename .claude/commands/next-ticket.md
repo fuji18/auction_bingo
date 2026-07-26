@@ -18,9 +18,10 @@ GitHub Issues のチケット(`ticket` ラベル付き Issue)を消化するた�
    ```bash
    gh issue list --label ticket --state open --json number,title,labels,body --limit 100
    ```
-2. **`in-progress` の Issue が既にある場合**は、新しいチケットに着手せず次の分岐に従う:
-   - その Issue に対応するオープン PR がある(`gh pr list` で確認)→ マージ待ち。PR の確認・マージを提案して終了する
-   - オープン PR がない → 作業が中断している。対応する `.steering/` を提示して `/resume-work` を案内して終了する
+2. **`in-progress` の Issue が既にある場合**は、新しいチケットに着手せず次の分岐に従う(判定は上から順に):
+   - **既に `develop` へマージ済み**(`gh pr list --state merged --head <branch>` に該当 PR がある、または `git log --oneline origin/develop..<branch>` が空)→ クローズ漏れ。`gh issue close [番号] --comment "develop マージ済み(PR #N)"` で手動クローズし、`in-progress` ラベルを外して次のチケット選定に進む
+   - **オープン PR がある**(`gh pr list --state open` で確認)→ マージ待ち。PR の確認・マージを提案して終了する
+   - **いずれもない** → 作業が中断している。対応する `.steering/` を提示して `/resume-work` を案内して終了する
 3. 引数で Issue 番号が指定されていればそれを選ぶ。指定がなければ以下の条件で選定する:
    - `in-progress` ラベルが付いていないこと
    - ボディの `depends: #N` で参照される Issue がすべて closed であること
@@ -37,16 +38,24 @@ gh issue edit [番号] --add-label in-progress
 
 Issue のボディ(スコープ・受け入れ条件・技術メモ)を要求として、`/add-feature` と同じフロー(ブランチ作成 → steering 計画 → 実装ループ → 並列検証(code-reviewer + test-runner) → 振り返り → コミット・PR)を実行する。
 
+- **ブランチは `develop` から切り、PR も `develop` 宛て**に作る(`gh pr create --base develop`)。`main` 宛てにしない(CLAUDE.md「ブランチ運用」節)
 - `.steering/` のディレクトリ名は `[YYYYMMDD]-issue[番号]-[短い名前]` とする
-- PR ボディに **`Closes #[番号]`** を必ず含める(マージ時に Issue が自動クローズされる)
+- PR ボディに **`Closes #[番号]`** を含める(develop 宛てでは自動発火しないが、将来 main へ直接入った場合の保険。実運用のクローズはステップ4で手動)
 - Issue に書かれていない機能(P1/P2 の前倒し等)を実装しない
 
 ### ステップ4: 作業記録の残置
 
-PR 作成まで完了したら、Issue にコメントで記録を残す(ステータス編集は不要。クローズは PR マージが自動で行う):
+PR 作成まで完了したら、Issue にコメントで記録を残す(ステータス編集は不要):
 
 ```bash
 gh issue comment [番号] --body "実装完了。PR: [PR URL] / steering: .steering/[ディレクトリ名]"
+```
+
+**クローズは `develop` マージ時に手動で行う**(`Closes #N` は develop 宛て PR では自動発火しないため。運用A・CLAUDE.md「チケット運用」節)。PR がマージされたら:
+
+```bash
+gh issue close [番号] --comment "develop マージ済み(PR #[PR番号])"
+gh issue edit [番号] --remove-label in-progress
 ```
 
 ### ステップ5: 報告
